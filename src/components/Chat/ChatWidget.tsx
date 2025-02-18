@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import ChatBubble from './ChatBubble';
-import { Message, DataCollectionState, DataCollectionStep } from '../../types';
+import { Message, DataCollectionState, DataCollectionStep, UserContactData } from '../../types';
 import { generateChatResponse } from '../../services/openaiService';
 import { 
   getNextPrompt, 
@@ -229,10 +229,10 @@ export default function ChatWidget() {
             )}
 
             {/* Upload-Bereich */}
-            {dataCollection.step === 'ready_for_upload' && (
+            {dataCollection.step === 'ready_for_upload' && dataCollection.data.name && dataCollection.data.email && (
               <div className="my-4 p-4 bg-blue-50 rounded-lg">
                 <DocumentUpload
-                  userData={dataCollection.data}
+                  userData={dataCollection.data as UserContactData}
                   onUploadComplete={handleUploadComplete}
                   onUploadError={handleUploadError}
                 />
