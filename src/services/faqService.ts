@@ -1,7 +1,7 @@
-import { FAQ } from '@/types';
+import { FAQ, SupportedLanguages } from '@/types';
 import { mockFAQs } from '@/data/mockFAQs';
 
-export async function getFAQs(language: string = 'de'): Promise<FAQ[]> {
+export async function getFAQs(language: SupportedLanguages = 'de'): Promise<FAQ[]> {
   // Simuliere API-Verzögerung
   await new Promise(resolve => setTimeout(resolve, 500));
   
@@ -12,7 +12,7 @@ export async function getFAQs(language: string = 'de'): Promise<FAQ[]> {
   }));
 }
 
-export async function searchFAQs(query: string, language: string = 'de'): Promise<FAQ[]> {
+export async function searchFAQs(query: string, language: SupportedLanguages = 'de'): Promise<FAQ[]> {
   const faqs = await getFAQs(language);
   const searchTerm = query.toLowerCase();
   
@@ -23,7 +23,7 @@ export async function searchFAQs(query: string, language: string = 'de'): Promis
   );
 }
 
-export async function getFAQsByCategory(category: string, language: string = 'de'): Promise<FAQ[]> {
+export async function getFAQsByCategory(category: string, language: SupportedLanguages = 'de'): Promise<FAQ[]> {
   const faqs = await getFAQs(language);
   return faqs.filter(faq => faq.category === category);
 } 
