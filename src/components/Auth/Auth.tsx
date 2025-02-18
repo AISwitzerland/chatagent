@@ -23,7 +23,7 @@ export default function Auth() {
       setError(null);
 
       try {
-        const { data, error: loginError } = await supabase.auth.signInWithPassword({
+        const { error: loginError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
