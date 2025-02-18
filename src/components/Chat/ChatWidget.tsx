@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import ChatBubble from './ChatBubble';
 import { Message, DataCollectionState, DataCollectionStep, UserContactData } from '../../types';
 import { generateChatResponse } from '../../services/openaiService';
@@ -10,6 +10,7 @@ import {
   validateInput 
 } from '../../services/dataCollectionService';
 import DocumentUpload from '../DocumentUpload/DocumentUpload';
+import ChatInput from './ChatInput';
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,8 +23,20 @@ export default function ChatWidget() {
     }
   ]);
   const [loading, setLoading] = useState(false);
-  const [inputMessage, setInputMessage] = useState('');
   
+  // Ref für automatisches Scrollen
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Scroll-Funktion
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  // Automatisches Scrollen bei neuen Nachrichten
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
   // Zustand für die Datenerfassung
   const [dataCollection, setDataCollection] = useState<DataCollectionState>({
     step: 'idle',
@@ -119,7 +132,6 @@ export default function ChatWidget() {
       };
       
       setMessages(prev => [...prev, userMessage]);
-      setInputMessage('');
 
       // Prüfen ob Dokumenten-Upload gestartet werden soll
       if (content.toLowerCase().includes('dokument') || content.toLowerCase().includes('upload')) {
@@ -148,7 +160,7 @@ export default function ChatWidget() {
         };
         setMessages(prev => [...prev, assistantMessage]);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Chat Error:', error);
       const errorMessage: Message = {
         id: Date.now().toString(),
@@ -196,7 +208,7 @@ export default function ChatWidget() {
             </button>
           </div>
 
-          {/* Messages */}
+          {/* Messages mit Scroll-Ref */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
               <div
@@ -238,37 +250,22 @@ export default function ChatWidget() {
                 />
               </div>
             )}
+            
+            {/* Scroll-Anker */}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
           <div className="p-4 border-t">
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage(inputMessage);
-                  }
-                }}
-                placeholder={
-                  dataCollection.step !== 'idle' 
-                    ? "Bitte beantworten Sie die Frage..." 
-                    : "Schreiben Sie eine Nachricht..."
-                }
-                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={loading}
-              />
-              <button
-                onClick={() => handleSendMessage(inputMessage)}
-                disabled={loading || !inputMessage.trim()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Senden
-              </button>
-            </div>
+            <ChatInput
+              onSendMessage={handleSendMessage}
+              disabled={loading}
+              placeholder={
+                dataCollection.step !== 'idle' 
+                  ? "Bitte beantworten Sie die Frage..." 
+                  : "Schreiben Sie eine Nachricht..."
+              }
+            />
           </div>
         </div>
       ) : (
