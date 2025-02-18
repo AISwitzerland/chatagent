@@ -80,6 +80,19 @@ export class GPT4VisionProcessor implements OcrProcessor {
       const endTime = performance.now();
       const processingTime = endTime - startTime;
 
+      const context: ProcessingContext = {
+        processId: crypto.randomUUID(),
+        fileName: options.documentContext?.fileName || 'unknown',
+        mimeType: options.documentContext?.mimeType || 'unknown',
+        fileSize: options.documentContext?.fileSize || 0,
+        startedAt: new Date().toISOString(),
+        metadata: {
+          ocrProcessor: this.getName(),
+          ocrConfidence: confidence,
+          processingTime
+        }
+      };
+
       return {
         text: result,
         confidence,
@@ -89,18 +102,7 @@ export class GPT4VisionProcessor implements OcrProcessor {
         },
         processingTime,
         processor: this.getName(),
-        context: {
-          processId: crypto.randomUUID(),
-          fileName: options.documentContext?.fileName || 'unknown',
-          mimeType: options.documentContext?.mimeType || 'unknown',
-          fileSize: options.documentContext?.fileSize || 0,
-          startedAt: new Date().toISOString(),
-          metadata: {
-            ocrProcessor: this.getName(),
-            ocrConfidence: confidence,
-            processingTime
-          }
-        }
+        context
       };
 
     } catch (error: any) {
