@@ -16,6 +16,7 @@ export type ProcessingStep =
 export interface ProcessingProgress {
   processId: string;
   status: ProcessingStatus;
+  currentStep: ProcessingStep;
   progress: number;
   message: string;
   error?: ProcessingError;
@@ -30,6 +31,7 @@ export interface ProcessingError {
   step: string;
   details?: any;
   retryCount?: number;
+  timestamp: string;
 }
 
 export interface ProcessingOptions {
