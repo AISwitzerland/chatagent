@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import ChatMessages from './ChatMessages';
 import ChatInput from './ChatInput';
 import { Message, DataCollectionState, DataCollectionStep, UserContactData } from '../../types';
@@ -10,7 +10,6 @@ import {
   updateDataCollectionState,
   validateInput,
 } from '../../services/dataCollectionService';
-import { _DataCollectionStep } from '@/types/chat';
 
 // Aktualisiere die Props der Komponenten
 interface _ChatMessagesProps {
@@ -39,6 +38,7 @@ export default function ChatContainer() {
     data: {},
     confirmed: false,
     retries: 0,
+    lastUpdated: new Date().toISOString(),
   });
 
   const handleUploadComplete = useCallback(() => {
@@ -143,6 +143,7 @@ export default function ChatContainer() {
             data: {},
             confirmed: false,
             retries: 0,
+            lastUpdated: new Date().toISOString(),
           });
 
           const assistantMessage: Message = {
