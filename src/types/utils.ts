@@ -13,8 +13,11 @@ export type Immutable<T> = {
   readonly [P in keyof T]: T[P] extends object ? Immutable<T[P]> : T[P];
 };
 
-export type AsyncReturnType<T extends (...args: any) => Promise<any>> =
-  T extends (...args: any) => Promise<infer R> ? R : any;
+export type AsyncReturnType<T extends (...args: any) => Promise<any>> = T extends (
+  ...args: any
+) => Promise<infer R>
+  ? R
+  : any;
 
 export type EntityId = Pick<BaseEntity, 'id'>;
 
@@ -70,6 +73,7 @@ export class ValidationError extends Error {
   ) {
     super(message);
     this.name = 'ValidationError';
+    Object.setPrototypeOf(this, ValidationError.prototype);
   }
 }
 
@@ -85,9 +89,7 @@ export class NotFoundError extends Error {
 }
 
 // Type Guards for Common Patterns
-export function isErrorWithMessage(
-  error: unknown
-): error is Error & { message: string } {
+export function isErrorWithMessage(error: unknown): error is Error & { message: string } {
   return (
     error instanceof Error ||
     (typeof error === 'object' &&
@@ -115,7 +117,5 @@ export function getCurrentTimestamp(): string {
 }
 
 export function formatValidationErrors(errors: ValidationError[]): string {
-  return errors
-    .map((error) => `${error.field ? `${error.field}: ` : ''}${error.message}`)
-    .join('\n');
-} 
+  return errors.map(error => `${error.field ? `${error.field}: ` : ''}${error.message}`).join('\n');
+}

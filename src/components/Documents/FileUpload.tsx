@@ -2,7 +2,6 @@
 
 import React, { useCallback, useState } from 'react';
 import { ValidationError } from '../../types/utils';
-import LoadingSpinner from '../ui/LoadingSpinner';
 
 export interface FileUploadProps {
   onUpload: (file: File) => Promise<void>;
@@ -11,6 +10,7 @@ export interface FileUploadProps {
   disabled?: boolean;
   className?: string;
   documentType?: string;
+  'data-testid'?: string;
 }
 
 export default function FileUpload({
@@ -19,20 +19,24 @@ export default function FileUpload({
   maxSize,
   disabled = false,
   className = '',
-  documentType = 'default'
+  documentType = 'default',
+  'data-testid': dataTestId,
 }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!disabled) {
-      setIsDragging(true);
-    }
-  }, [disabled]);
+  const handleDragEnter = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!disabled) {
+        setIsDragging(true);
+      }
+    },
+    [disabled]
+  );
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -45,66 +49,73 @@ export default function FileUpload({
     e.stopPropagation();
   }, []);
 
-  const validateFile = useCallback((file: File) => {
-    if (!allowedTypes.includes(file.type)) {
-      throw new ValidationError(
-        'Nicht unterstützter Dateityp',
-        'file',
-        'INVALID_FILE_TYPE'
-      );
-    }
-
-    if (file.size > maxSize) {
-      throw new ValidationError(
-        'Datei ist zu groß',
-        'file',
-        'FILE_TOO_LARGE'
-      );
-    }
-  }, [allowedTypes, maxSize]);
-
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    if (disabled) return;
-
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
-
-    try {
-      validateFile(file);
-      await onUpload(file);
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        // Die Fehlerbehandlung wird von der übergeordneten Komponente übernommen
-        throw error;
+  const validateFile = useCallback(
+    (file: File) => {
+      if (!allowedTypes.includes(file.type)) {
+        throw new ValidationError('Nicht unterstützter Dateityp', 'file', 'INVALID_FILE_TYPE');
       }
-      throw new Error('Fehler beim Datei-Upload');
-    }
-  }, [disabled, onUpload, validateFile]);
 
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (disabled) return;
-
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      validateFile(file);
-      await onUpload(file);
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        // Die Fehlerbehandlung wird von der übergeordneten Komponente übernommen
-        throw error;
+      if (file.size > maxSize) {
+        throw new ValidationError('Datei ist zu groß', 'file', 'FILE_TOO_LARGE');
       }
-      throw new Error('Fehler beim Datei-Upload');
-    } finally {
-      // Reset input
-      e.target.value = '';
-    }
-  }, [disabled, onUpload, validateFile]);
+    },
+    [allowedTypes, maxSize]
+  );
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+
+      if (disabled) return;
+
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+
+      try {
+        validateFile(file);
+        await onUpload(file);
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          setError(error.message);
+          onUpload(error as any);
+        } else {
+          const uploadError = new ValidationError('Fehler beim Datei-Upload', 'file', 'UPLOAD_ERROR');
+          setError(uploadError.message);
+          onUpload(uploadError as any);
+        }
+      }
+    },
+    [disabled, onUpload, validateFile]
+  );
+
+  const handleFileSelect = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (disabled) return;
+
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        validateFile(file);
+        await onUpload(file);
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          setError(error.message);
+          onUpload(error as any);
+        } else {
+          const uploadError = new ValidationError('Fehler beim Datei-Upload', 'file', 'UPLOAD_ERROR');
+          setError(uploadError.message);
+          onUpload(uploadError as any);
+        }
+      } finally {
+        // Reset input
+        e.target.value = '';
+      }
+    },
+    [disabled, onUpload, validateFile]
+  );
 
   const handleUploadClick = useCallback(async () => {
     if (!selectedFile || isUploading) return;
@@ -142,7 +153,7 @@ export default function FileUpload({
         onChange={handleFileSelect}
         accept={allowedTypes.join(',')}
         disabled={disabled}
-        aria-label="Datei hochladen"
+        data-testid={dataTestId}
         id={`fileInput-${documentType}`}
       />
       <div className="space-y-1 text-center">
@@ -170,21 +181,16 @@ export default function FileUpload({
           <p className="pl-1">oder hierher ziehen</p>
         </div>
         <p className="text-xs text-gray-500">
-          {allowedTypes.map(type => type.split('/')[1]).join(', ')} bis zu {(maxSize / (1024 * 1024)).toFixed(0)} MB
+          {allowedTypes.map(type => type.split('/')[1]).join(', ')} bis zu{' '}
+          {(maxSize / (1024 * 1024)).toFixed(0)} MB
         </p>
       </div>
 
-      {error && (
-        <p className="mt-2 text-sm text-red-600">
-          {error}
-        </p>
-      )}
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
       {selectedFile && !error && !isUploading && (
         <div className="mt-4">
-          <p className="text-sm text-gray-600">
-            Ausgewählte Datei: {selectedFile.name}
-          </p>
+          <p className="text-sm text-gray-600">Ausgewählte Datei: {selectedFile.name}</p>
           <button
             onClick={handleUploadClick}
             className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -196,4 +202,4 @@ export default function FileUpload({
       )}
     </div>
   );
-} 
+}
