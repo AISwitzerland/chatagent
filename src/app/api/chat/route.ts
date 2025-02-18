@@ -1,13 +1,17 @@
 import OpenAI from 'openai';
 import { NextResponse } from 'next/server';
-import { Message, ChatSession } from '../../../types';
+import { Message } from '../../../types';
 import { cookies } from 'next/headers';
 import { v4 as uuidv4 } from 'uuid';
 
 // Am Anfang der Datei
 console.log('Environment Debug:', {
   NODE_ENV: process.env.NODE_ENV,
-  envFiles: require('fs').readdirSync('.').filter(function(f: string) { return f.startsWith('.env'); }),
+  envFiles: require('fs')
+    .readdirSync('.')
+    .filter(function (f: string) {
+      return f.startsWith('.env');
+    }),
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   OPENAI_API_KEY_LENGTH: process.env.OPENAI_API_KEY?.length,
   OPENAI_API_KEY_START: process.env.OPENAI_API_KEY?.substring(0, 10),
@@ -34,7 +38,7 @@ const apiKey = validateEnvironment();
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: apiKey
+  apiKey: apiKey,
 });
 
 // Validiere oder erstelle eine neue Session
@@ -87,27 +91,30 @@ export async function POST(req: Request) {
   try {
     const cookieStore = await cookies();
     let sessionId = cookieStore.get('chat_session')?.value;
-    
+
     // Erstelle oder validiere Session
     sessionId = getOrCreateSession(sessionId);
-    
-    const { messages, language } = await req.json();
-    
+
+    const { messages, language }: ChatRequest = await req.json();
+
     // Setze Session-Cookie
     const response = NextResponse.next();
     response.cookies.set('chat_session', sessionId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 3600 // 1 Stunde
+      maxAge: 3600, // 1 Stunde
     });
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        ...messages
-      ]
+        {
+          role: 'system',
+          content: `${SYSTEM_PROMPT}\n\nBitte antworte auf ${language || 'Deutsch'}.`,
+        },
+        ...messages,
+      ],
     });
 
     // Speichere Message in temporärem Session-Storage
@@ -115,7 +122,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       content: completion.choices[0].message.content,
-      session_id: sessionId
+      session_id: sessionId,
     });
   } catch (error: any) {
     console.error('Chat API Error:', {
@@ -123,12 +130,15 @@ export async function POST(req: Request) {
       type: error.type,
       status: error.status,
       timestamp: new Date().toISOString(),
-      details: error.response?.data
+      details: error.response?.data,
     });
 
-    return NextResponse.json({ 
-      error: error.message || 'Failed to generate response',
-      details: error.message 
-    }, { status: error.status || 500 });
+    return NextResponse.json(
+      {
+        error: error.message || 'Failed to generate response',
+        details: error.message,
+      },
+      { status: error.status || 500 }
+    );
   }
-} 
+}
