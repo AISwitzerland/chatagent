@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import ChatMessages from './ChatMessages';
 import ChatInput from './ChatInput';
-import { Message, DataCollectionState, DataCollectionStep } from '../../types';
+import { Message, DataCollectionState, DataCollectionStep, UserContactData } from '../../types';
 import { generateChatResponse } from '../../services/openaiService';
 import { 
   getNextPrompt, 
@@ -16,7 +16,7 @@ interface ChatMessagesProps {
   messages: Message[];
   loading: boolean;
   showUpload?: boolean;
-  userData: any;
+  userData?: UserContactData;
   onUploadComplete: () => void;
   onUploadError: (errorMessage: string) => void;
 }
@@ -170,11 +170,14 @@ export default function ChatContainer() {
           {error}
         </div>
       )}
-      <ChatMessages 
-        messages={messages} 
+      <ChatMessages
+        messages={messages}
         loading={loading}
         showUpload={dataCollection.step === 'ready_for_upload'}
-        userData={dataCollection.data}
+        userData={dataCollection.step === 'ready_for_upload' && dataCollection.data.name && dataCollection.data.email ? 
+          dataCollection.data as UserContactData : 
+          undefined
+        }
         onUploadComplete={handleUploadComplete}
         onUploadError={handleUploadError}
       />
