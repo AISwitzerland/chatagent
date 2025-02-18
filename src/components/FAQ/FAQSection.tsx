@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { FAQ } from '@/types';
+import { FAQ, SupportedLanguages } from '@/types';
 import { getFAQs, searchFAQs } from '@/services/faqService';
 import { SUPPORTED_LANGUAGES } from '@/services/languageService';
 
 export default function FAQSection() {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [language, setLanguage] = useState('de');
+  const [language, setLanguage] = useState<SupportedLanguages>('de');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function FAQSection() {
         />
         <select
           value={language}
-          onChange={(e) => setLanguage(e.target.value)}
+          onChange={(e) => setLanguage(e.target.value as SupportedLanguages)}
           className="mt-2 p-2 border rounded-lg"
         >
           {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => (

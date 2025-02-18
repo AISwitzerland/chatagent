@@ -42,8 +42,8 @@ export interface ProcessingOptions {
 }
 
 export const DEFAULT_PROCESSING_OPTIONS: ProcessingOptions = {
-  maxRetries: 3,
-  retryDelay: 1000,
-  timeout: 300000, // 5 minutes
+  maxRetries: 2,
+  retryDelay: 2000,
+  timeout: 120000,
   priority: 'normal'
 }; 

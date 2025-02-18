@@ -1,93 +1,81 @@
-import { createWorker, Worker } from 'tesseract.js';
-import { OcrProcessor, OcrResult, OcrOptions, ImagePreprocessorOptions } from '../types';
-import { imagePreprocessor } from '../utils/imagePreprocessor';
+import { createWorker, WorkerOptions } from 'tesseract.js';
+import { OcrProcessor, OcrResult, OcrOptions, OcrProcessorType } from '../types';
 import { ProcessingError } from '../../utils';
 import { performance } from 'perf_hooks';
-import { ProcessingContext } from '../../types';
+import { imagePreprocessor } from '../utils/imagePreprocessor';
 
 export class TesseractProcessor implements OcrProcessor {
-  private worker: Worker | null = null;
+  private worker: Awaited<ReturnType<typeof createWorker>> | null = null;
 
-  getName(): string {
+  getName(): OcrProcessorType {
     return 'tesseract';
   }
 
   async isAvailable(): Promise<boolean> {
-    return true;
+    try {
+      if (!this.worker) {
+        this.worker = await createWorker();
+        
+        // Initialisiere die deutsche Sprache
+        await this.worker.reinitialize('deu');
+      }
+      return true;
+    } catch (error) {
+      console.error('Tesseract nicht verfügbar:', error);
+      return false;
+    }
   }
 
   async processImage(image: Buffer, options: OcrOptions): Promise<OcrResult> {
     const startTime = performance.now();
 
     try {
-      if (!options.documentContext) {
+      if (!this.worker) {
         throw new ProcessingError(
-          'Dokumentkontext ist erforderlich',
+          'Tesseract Worker nicht initialisiert',
           'tesseract-processing',
           null
         );
       }
 
-      // Bild vorverarbeiten
-      const preprocessOptions: ImagePreprocessorOptions = {
-        mimeType: options.documentContext.mimeType,
-        enhanceImage: options.enhanceImage
-      };
-      
       const { processedImage, metadata } = await imagePreprocessor.preprocessImage(
         image,
-        preprocessOptions
+        {
+          mimeType: options.documentContext?.mimeType || 'image/jpeg',
+          enhanceImage: options.enhanceImage,
+          minQuality: options.minQuality
+        }
       );
 
-      // Worker initialisieren
-      if (!this.worker) {
-        this.worker = await createWorker();
-        await this.worker.reinitialize(options.language || 'deu');
-      }
-
-      // OCR durchführen
-      const { data: { text, confidence } } = await this.worker.recognize(processedImage);
-
+      const result = await this.worker.recognize(processedImage);
       const endTime = performance.now();
       const processingTime = endTime - startTime;
 
-      // Metadaten mit Dokumentkontext anreichern
-      const enrichedMetadata = {
-        ...metadata,
-        documentType: options.documentContext.mimeType,
-        fileName: options.documentContext.fileName,
-        fileSize: options.documentContext.fileSize,
-        ocrConfidence: confidence,
-        ...options.documentContext.metadata
-      };
-
-      // Kontext erstellen
-      const context: ProcessingContext = {
-        processId: crypto.randomUUID(),
-        fileName: options.documentContext.fileName,
-        mimeType: options.documentContext.mimeType,
-        fileSize: options.documentContext.fileSize,
-        startedAt: new Date().toISOString(),
-        metadata: {
-          ...options.documentContext.metadata,
-          ocrProcessor: this.getName(),
-          ocrConfidence: confidence / 100, // Normalisieren auf 0-1
-          processingTime
-        }
-      };
-
       return {
-        text,
-        confidence: confidence / 100, // Normalisieren auf 0-1
-        metadata: enrichedMetadata,
+        text: result.data.text,
+        confidence: result.data.confidence / 100,
+        metadata: {
+          ...metadata,
+          documentContext: options.documentContext
+        },
         processingTime,
         processor: this.getName(),
-        context
+        context: {
+          processId: crypto.randomUUID(),
+          fileName: options.documentContext?.fileName || 'unknown',
+          mimeType: options.documentContext?.mimeType || 'unknown',
+          fileSize: options.documentContext?.fileSize || 0,
+          startedAt: new Date().toISOString(),
+          metadata: {
+            ocrProcessor: this.getName(),
+            ocrConfidence: result.data.confidence / 100,
+            processingTime
+          }
+        }
       };
-
-    } catch (error) {
+    } catch (error: any) {
       throw new ProcessingError(
-        'Tesseract Verarbeitungsfehler',
+        `Tesseract Verarbeitungsfehler: ${error.message}`,
         'tesseract-processing',
         error
       );

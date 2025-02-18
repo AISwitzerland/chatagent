@@ -1,5 +1,5 @@
 import { OpenAI } from 'openai';
-import { OcrProcessor, OcrResult, OcrOptions, ImagePreprocessorOptions } from '../types';
+import { OcrProcessor, OcrResult, OcrOptions, ImagePreprocessorOptions, OcrProcessorType } from '../types';
 import { imagePreprocessor } from '../utils/imagePreprocessor';
 import { ProcessingError } from '../../utils';
 import { performance } from 'perf_hooks';
@@ -19,7 +19,7 @@ export class GPT4VisionProcessor implements OcrProcessor {
     });
   }
 
-  getName(): string {
+  getName(): OcrProcessorType {
     return 'gpt4-vision';
   }
 
@@ -31,25 +31,14 @@ export class GPT4VisionProcessor implements OcrProcessor {
     const startTime = performance.now();
 
     try {
-      if (!options.documentContext) {
-        throw new ProcessingError(
-          'Dokumentkontext ist erforderlich',
-          'gpt4-vision-processing',
-          null
-        );
-      }
-
       // Bild vorverarbeiten
       const preprocessOptions: ImagePreprocessorOptions = {
-        mimeType: options.documentContext.mimeType
+        mimeType: options.documentContext?.mimeType || 'image/jpeg',
+        enhanceImage: options.enhanceImage,
+        minQuality: options.minQuality
       };
-      
-      const { processedImage, metadata } = await imagePreprocessor.preprocessImage(
-        image,
-        preprocessOptions
-      );
-      
-      // Base64 konvertieren
+
+      const { processedImage, metadata } = await imagePreprocessor.preprocessImage(image, preprocessOptions);
       const base64Image = await imagePreprocessor.convertToBase64(processedImage);
 
       // GPT-4 Vision API aufrufen
@@ -63,14 +52,14 @@ export class GPT4VisionProcessor implements OcrProcessor {
           {
             role: 'user',
             content: [
-              { 
-                type: 'text', 
-                text: `Extrahiere den Text aus diesem Dokument: ${options.documentContext.fileName}` 
+              {
+                type: 'text',
+                text: `Analysiere dieses Dokument und extrahiere alle relevanten Informationen. Das Dokument ist: ${options.documentContext?.fileName || 'Unbekannt'}`
               },
               {
                 type: 'image_url',
                 image_url: {
-                  url: `data:image/png;base64,${base64Image}`
+                  url: `data:${preprocessOptions.mimeType};base64,${base64Image}`
                 }
               }
             ]
@@ -80,51 +69,47 @@ export class GPT4VisionProcessor implements OcrProcessor {
         temperature: OCR_CONFIG.gptVision.temperature
       });
 
+      const result = response.choices[0]?.message?.content;
+      
+      if (!result) {
+        throw new Error('Keine Antwort von GPT-Vision erhalten');
+      }
+
+      const confidence = this.calculateConfidence(metadata.quality || 0.8, response);
+
       const endTime = performance.now();
       const processingTime = endTime - startTime;
 
-      // Confidence-Score basierend auf Bildqualität und Modell-Output berechnen
-      const confidence = this.calculateConfidence(metadata.quality || 0.9, response);
-
-      // Metadaten mit Dokumentkontext anreichern
-      const enrichedMetadata = {
-        ...metadata,
-        documentType: options.documentContext.mimeType,
-        fileName: options.documentContext.fileName,
-        fileSize: options.documentContext.fileSize,
-        ...options.documentContext.metadata
-      };
-
-      // Kontext erstellen
-      const context: ProcessingContext = {
-        processId: crypto.randomUUID(),
-        fileName: options.documentContext.fileName,
-        mimeType: options.documentContext.mimeType,
-        fileSize: options.documentContext.fileSize,
-        startedAt: new Date().toISOString(),
+      return {
+        text: result,
+        confidence,
         metadata: {
-          ...options.documentContext.metadata,
-          ocrProcessor: this.getName(),
-          ocrConfidence: confidence,
-          processingTime
+          ...metadata,
+          documentContext: options.documentContext
+        },
+        processingTime,
+        processor: this.getName(),
+        context: {
+          processId: crypto.randomUUID(),
+          fileName: options.documentContext?.fileName || 'unknown',
+          mimeType: options.documentContext?.mimeType || 'unknown',
+          fileSize: options.documentContext?.fileSize || 0,
+          startedAt: new Date().toISOString(),
+          metadata: {
+            ocrProcessor: this.getName(),
+            ocrConfidence: confidence,
+            processingTime
+          }
         }
       };
 
-      return {
-        text: response.choices[0]?.message?.content || '',
-        confidence,
-        metadata: enrichedMetadata,
-        processingTime,
-        processor: this.getName(),
-        context
-      };
-
-    } catch (error) {
-      throw new ProcessingError(
-        'GPT-4 Vision Verarbeitungsfehler',
-        'gpt4-vision-processing',
+    } catch (error: any) {
+      const processingError = new ProcessingError(
+        `GPT-Vision Verarbeitungsfehler: ${error.message}`,
+        'gpt4-vision-processor',
         error
       );
+      throw processingError;
     }
   }
 
@@ -132,19 +117,21 @@ export class GPT4VisionProcessor implements OcrProcessor {
     // Basis-Konfidenz basierend auf der Bildqualität
     let confidence = imageQuality;
 
-    // Reduziere Konfidenz wenn die Antwort leer oder sehr kurz ist
-    const text = response.choices[0]?.message?.content || '';
-    if (!text) {
+    // Zusätzliche Faktoren für die Konfidenzberechnung
+    const hasContent = response.choices[0]?.message?.content?.length > 0;
+    const contentLength = response.choices[0]?.message?.content?.length || 0;
+    
+    // Reduziere Konfidenz wenn kein Inhalt
+    if (!hasContent) {
       confidence *= 0.5;
-    } else if (text.length < 50) {
-      confidence *= 0.8;
+    }
+    
+    // Erhöhe Konfidenz bei längeren Antworten
+    if (contentLength > 500) {
+      confidence *= 1.2;
     }
 
-    // Reduziere Konfidenz wenn die Antwort unvollständig erscheint
-    if (text.endsWith('...') || text.includes('[unlesbar]') || text.includes('[unklar]')) {
-      confidence *= 0.9;
-    }
-
-    return Math.min(Math.max(confidence, 0), 1); // Normalisiere auf 0-1
+    // Stelle sicher, dass die Konfidenz zwischen 0 und 1 liegt
+    return Math.min(Math.max(confidence, 0), 1);
   }
 } 

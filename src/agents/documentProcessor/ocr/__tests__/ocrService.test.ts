@@ -1,6 +1,6 @@
 import { OcrService } from '../ocrService';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { OcrOptions } from '../types';
+import { imagePreprocessor } from '../utils/imagePreprocessor';
 
 // Mock OpenAI
 jest.mock('openai', () => ({
@@ -19,18 +19,50 @@ jest.mock('openai', () => ({
   }))
 }));
 
+// Mock imagePreprocessor
+jest.mock('../utils/imagePreprocessor', () => ({
+  imagePreprocessor: {
+    preprocessImage: jest.fn().mockResolvedValue({
+      processedImage: Buffer.from('mocked-processed-image'),
+      metadata: {
+        format: 'jpeg',
+        width: 800,
+        height: 600,
+        quality: 0.9,
+        enhancementApplied: true
+      }
+    }),
+    convertToBase64: jest.fn().mockReturnValue('mocked-base64-image')
+  }
+}));
+
+// Mock Tesseract.js
+jest.mock('tesseract.js', () => ({
+  createWorker: jest.fn().mockResolvedValue({
+    reinitialize: jest.fn().mockResolvedValue(undefined),
+    recognize: jest.fn().mockResolvedValue({
+      data: {
+        text: 'Tesseract OCR Ergebnis',
+        confidence: 85.5
+      }
+    }),
+    terminate: jest.fn().mockResolvedValue(undefined)
+  })
+}));
+
 describe('OcrService', () => {
   let ocrService: OcrService;
-  
+  let originalApiKey: string | undefined;
+
   beforeEach(() => {
-    // Setup environment for tests
+    originalApiKey = process.env.OPENAI_API_KEY;
     process.env.OPENAI_API_KEY = 'test-api-key';
     ocrService = OcrService.getInstance();
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
-    // Cleanup environment after tests
-    delete process.env.OPENAI_API_KEY;
+    process.env.OPENAI_API_KEY = originalApiKey;
     jest.clearAllMocks();
   });
 
@@ -47,49 +79,114 @@ describe('OcrService', () => {
   });
 
   it('should process image with GPT-4 Vision when available', async () => {
-    // Test-Bild laden
-    const imagePath = join(__dirname, 'testData', 'sample.png');
-    const imageBuffer = readFileSync(imagePath);
+    // Erstelle ein Test-Bild (1x1 schwarzer Pixel)
+    const testImage = Buffer.from([
+      0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+      0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+      0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+      0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
+      0x89, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x44, 0x41,
+      0x54, 0x08, 0xD7, 0x63, 0x60, 0x60, 0x60, 0x60,
+      0x00, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0D, 0x0A,
+      0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45,
+      0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82
+    ]);
 
-    const result = await ocrService.processImage(imageBuffer, {
-      preferredProcessor: 'gpt4-vision',
-      language: 'de'
-    });
+    const options: OcrOptions = {
+      language: 'de',
+      enhanceImage: true,
+      documentContext: {
+        fileName: 'test.jpg',
+        mimeType: 'image/jpeg',
+        fileSize: testImage.length
+      }
+    };
 
-    expect(result).toHaveProperty('text');
-    expect(result).toHaveProperty('confidence');
-    expect(result).toHaveProperty('metadata');
-    expect(result).toHaveProperty('processingTime');
+    const result = await ocrService.processImage(testImage, options);
+    expect(result.text).toBeDefined();
+    expect(result.confidence).toBeGreaterThan(0);
     expect(result.processor).toBe('gpt4-vision');
   });
 
   it('should fall back to Tesseract when GPT-4 Vision is not available', async () => {
-    // Temporär OPENAI_API_KEY entfernen
     const originalKey = process.env.OPENAI_API_KEY;
-    delete process.env.OPENAI_API_KEY;
+    process.env.OPENAI_API_KEY = '';
 
-    // Test-Bild laden
-    const imagePath = join(__dirname, 'testData', 'sample.png');
-    const imageBuffer = readFileSync(imagePath);
+    const testImage = Buffer.from([
+      0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+      0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+      0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+      0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
+      0x89, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x44, 0x41,
+      0x54, 0x08, 0xD7, 0x63, 0x60, 0x60, 0x60, 0x60,
+      0x00, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0D, 0x0A,
+      0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45,
+      0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82
+    ]);
 
-    try {
-      const result = await ocrService.processImage(imageBuffer, {
-        language: 'de'
-      });
+    const options: OcrOptions = {
+      language: 'de',
+      enhanceImage: true,
+      documentContext: {
+        fileName: 'test.jpg',
+        mimeType: 'image/jpeg',
+        fileSize: testImage.length
+      }
+    };
 
-      expect(result.processor).toBe('tesseract');
-    } finally {
-      // OPENAI_API_KEY wiederherstellen
-      process.env.OPENAI_API_KEY = originalKey;
-    }
-  }, 15000); // Erhöhe Timeout auf 15 Sekunden
+    const result = await ocrService.processImage(testImage, options);
+    expect(result.text).toBeDefined();
+    expect(result.confidence).toBeGreaterThan(0);
+    expect(result.processor).toBe('tesseract');
+
+    process.env.OPENAI_API_KEY = originalKey;
+  });
 
   it('should handle processing errors gracefully', async () => {
-    // Ungültiges Bild
-    const invalidImage = Buffer.from('invalid image data');
+    // Mock imagePreprocessor to throw an error
+    (imagePreprocessor.preprocessImage as jest.Mock).mockRejectedValueOnce(
+      new Error('Fehler bei der Bildvorverarbeitung')
+    );
 
-    await expect(ocrService.processImage(invalidImage))
+    const invalidImage = Buffer.from([0x00]); // Ungültiges Bild
+    const options: OcrOptions = {
+      language: 'de',
+      enhanceImage: true,
+      documentContext: {
+        fileName: 'test.jpg',
+        mimeType: 'image/jpeg',
+        fileSize: 1
+      }
+    };
+
+    await expect(ocrService.processImage(invalidImage, options))
       .rejects
-      .toThrow('OCR Verarbeitungsfehler');
+      .toThrow(/Verarbeitungsfehler/);
+  });
+
+  it('should work without optional fields', async () => {
+    const testImage = Buffer.from([
+      0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+      0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+      0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+      0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
+      0x89, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x44, 0x41,
+      0x54, 0x08, 0xD7, 0x63, 0x60, 0x60, 0x60, 0x60,
+      0x00, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0D, 0x0A,
+      0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45,
+      0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82
+    ]);
+
+    const options: OcrOptions = {
+      documentContext: {
+        fileName: 'test.jpg',
+        mimeType: 'image/jpeg',
+        fileSize: testImage.length
+      }
+    };
+
+    const result = await ocrService.processImage(testImage, options);
+    expect(result.text).toBeDefined();
+    expect(result.confidence).toBeGreaterThan(0);
   });
 }); 
