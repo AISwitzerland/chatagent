@@ -7,6 +7,10 @@ export const mockFAQs: FAQ[] = [
     question: 'Was kostet die Grundversicherung?',
     answer: 'Die monatliche Prämie für die Grundversicherung variiert je nach Kanton, Franchise und Versicherungsmodell. Bei einer Franchise von CHF 300 liegt die Prämie zwischen CHF 250 und CHF 400 pro Monat für Erwachsene. Wählen Sie eine höhere Franchise (max. CHF 2500), können Sie bis zu 40% der Prämie sparen. Für Kinder und junge Erwachsene gelten reduzierte Tarife.',
     languages: {
+      de: {
+        question: 'Was kostet die Grundversicherung?',
+        answer: 'Die monatliche Prämie für die Grundversicherung variiert je nach Kanton, Franchise und Versicherungsmodell. Bei einer Franchise von CHF 300 liegt die Prämie zwischen CHF 250 und CHF 400 pro Monat für Erwachsene. Wählen Sie eine höhere Franchise (max. CHF 2500), können Sie bis zu 40% der Prämie sparen. Für Kinder und junge Erwachsene gelten reduzierte Tarife.'
+      },
       en: {
         question: 'How much does basic health insurance cost?',
         answer: 'The monthly premium for basic health insurance varies by canton, deductible, and insurance model. With a deductible of CHF 300, the premium ranges between CHF 250 and CHF 400 per month for adults. By choosing a higher deductible (max. CHF 2500), you can save up to 40% on premiums. Reduced rates apply for children and young adults.'
@@ -27,6 +31,10 @@ export const mockFAQs: FAQ[] = [
     question: 'Wie berechnet sich die Prämie für die Hausratversicherung?',
     answer: 'Die Prämie basiert auf der Versicherungssumme und der Wohnfläche. Für eine 3-Zimmer-Wohnung (75m²) mit einer Versicherungssumme von CHF 100\'000 beträgt die Jahresprämie etwa CHF 200-300. Zusätzliche Deckungen wie Wertsachen oder Elementarschäden erhöhen die Prämie. Ein Selbstbehalt von CHF 200 ist Standard. Bei Einbruchsicherungen gibt es Prämienrabatte von bis zu 15%.',
     languages: {
+      de: {
+        question: 'Wie berechnet sich die Prämie für die Hausratversicherung?',
+        answer: 'Die Prämie basiert auf der Versicherungssumme und der Wohnfläche. Für eine 3-Zimmer-Wohnung (75m²) mit einer Versicherungssumme von CHF 100\'000 beträgt die Jahresprämie etwa CHF 200-300. Zusätzliche Deckungen wie Wertsachen oder Elementarschäden erhöhen die Prämie. Ein Selbstbehalt von CHF 200 ist Standard. Bei Einbruchsicherungen gibt es Prämienrabatte von bis zu 15%.'
+      },
       en: {
         question: 'How is the household contents insurance premium calculated?',
         answer: 'The premium is based on the sum insured and living space. For a 3-room apartment (75m²) with an insurance sum of CHF 100,000, the annual premium is approximately CHF 200-300. Additional coverage like valuables or natural hazards increases the premium. A deductible of CHF 200 is standard. Burglary protection measures can lead to premium discounts of up to 15%.'
@@ -47,6 +55,10 @@ export const mockFAQs: FAQ[] = [
     question: 'Welche Faktoren beeinflussen die Autoversicherungsprämie?',
     answer: 'Die Prämie wird durch mehrere Faktoren bestimmt: Fahrzeugtyp, Alter des Fahrzeugs, PS-Zahl, Schadenfreiheitsrabatt (Bonus bis 70%), Alter des Fahrers und Wohnort. Beispiel: Ein VW Golf (130 PS, Neuwert CHF 35\'000) kostet mit Vollkasko für einen 35-jährigen Fahrer mit 5 Jahren unfallfreiem Fahren ca. CHF 800-1\'200 pro Jahr. Die Teilkasko liegt etwa 40% darunter. Der Selbstbehalt beträgt bei Vollkasko CHF 1\'000, bei Teilkasko CHF 500.',
     languages: {
+      de: {
+        question: 'Welche Faktoren beeinflussen die Autoversicherungsprämie?',
+        answer: 'Die Prämie wird durch mehrere Faktoren bestimmt: Fahrzeugtyp, Alter des Fahrzeugs, PS-Zahl, Schadenfreiheitsrabatt (Bonus bis 70%), Alter des Fahrers und Wohnort. Beispiel: Ein VW Golf (130 PS, Neuwert CHF 35\'000) kostet mit Vollkasko für einen 35-jährigen Fahrer mit 5 Jahren unfallfreiem Fahren ca. CHF 800-1\'200 pro Jahr. Die Teilkasko liegt etwa 40% darunter. Der Selbstbehalt beträgt bei Vollkasko CHF 1\'000, bei Teilkasko CHF 500.'
+      },
       en: {
         question: 'What factors influence the car insurance premium?',
         answer: 'The premium is determined by several factors: vehicle type, age of vehicle, horsepower, no-claims discount (bonus up to 70%), driver age, and residence. Example: A VW Golf (130 HP, new value CHF 35,000) with comprehensive coverage costs approx. CHF 800-1,200 per year for a 35-year-old driver with 5 years of accident-free driving.'
@@ -67,6 +79,10 @@ export const mockFAQs: FAQ[] = [
     question: 'Was kostet eine Privathaftpflichtversicherung und welche Deckung ist empfohlen?',
     answer: 'Eine Privathaftpflichtversicherung mit einer empfohlenen Deckungssumme von CHF 5 Millionen kostet für einen Einzelhaushalt ca. CHF 100-150 pro Jahr, für Familien CHF 150-200. Die Deckung umfasst Personen-, Sach- und Vermögensschäden. Zusätzliche Optionen wie Schlüsselverlust oder Mietkaution erhöhen die Prämie um ca. CHF 20-50. Der übliche Selbstbehalt beträgt CHF 200. Mieter sollten unbedingt Mieterschäden einschließen.',
     languages: {
+      de: {
+        question: 'Was kostet eine Privathaftpflichtversicherung und welche Deckung ist empfohlen?',
+        answer: 'Eine Privathaftpflichtversicherung mit einer empfohlenen Deckungssumme von CHF 5 Millionen kostet für einen Einzelhaushalt ca. CHF 100-150 pro Jahr, für Familien CHF 150-200. Die Deckung umfasst Personen-, Sach- und Vermögensschäden. Zusätzliche Optionen wie Schlüsselverlust oder Mietkaution erhöhen die Prämie um ca. CHF 20-50. Der übliche Selbstbehalt beträgt CHF 200. Mieter sollten unbedingt Mieterschäden einschließen.'
+      },
       en: {
         question: 'How much does personal liability insurance cost and what coverage is recommended?',
         answer: 'Personal liability insurance with a recommended coverage of CHF 5 million costs approx. CHF 100-150 per year for individuals, CHF 150-200 for families. Coverage includes personal injury, property damage, and financial losses. Additional options like key loss or rental deposit increase the premium by CHF 20-50.'
@@ -87,6 +103,10 @@ export const mockFAQs: FAQ[] = [
     question: 'Welche Zusatzversicherungen sind sinnvoll und was kosten sie?',
     answer: 'Die beliebtesten Zusatzversicherungen sind:\n\n1. Spital-Zusatzversicherung (Halbprivat): CHF 50-150/Monat\n- Freie Arztwahl\n- Zweibettzimmer\n- Schweizweit alle Spitäler\n\n2. Zahnversicherung: CHF 20-40/Monat\n-Deckt bis zu 75% der Behandlungskosten\n- Maximale Jahresleistung CHF 5\'000\n\n3. Alternative Medizin: CHF 20-30/Monat\n- Homöopathie, Akupunktur, etc.\n- Bis CHF 3\'000 pro Jahr\n\nPreise variieren nach Alter und Gesundheitszustand. Eine Gesundheitsprüfung ist erforderlich.',
     languages: {
+      de: {
+        question: 'Welche Zusatzversicherungen sind sinnvoll und was kosten sie?',
+        answer: 'Die beliebtesten Zusatzversicherungen sind:\n\n1. Spital-Zusatzversicherung (Halbprivat): CHF 50-150/Monat\n- Freie Arztwahl\n- Zweibettzimmer\n- Schweizweit alle Spitäler\n\n2. Zahnversicherung: CHF 20-40/Monat\n-Deckt bis zu 75% der Behandlungskosten\n- Maximale Jahresleistung CHF 5\'000\n\n3. Alternative Medizin: CHF 20-30/Monat\n- Homöopathie, Akupunktur, etc.\n- Bis CHF 3\'000 pro Jahr\n\nPreise variieren nach Alter und Gesundheitszustand. Eine Gesundheitsprüfung ist erforderlich.'
+      },
       en: {
         question: 'Which supplementary insurances are recommended and what do they cost?',
         answer: 'The most popular supplementary insurances are:\n\n1. Hospital supplementary insurance (semi-private): CHF 50-150/month\n- Free choice of doctor\n- Two-bed room\n- All hospitals in Switzerland\n\n2. Dental insurance: CHF 20-40/month\n- Covers up to 75% of treatment costs\n- Maximum annual benefit CHF 5,000\n\n3. Alternative medicine: CHF 20-30/month'
