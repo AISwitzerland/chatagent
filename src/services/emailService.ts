@@ -1,80 +1,88 @@
 import { Resend } from 'resend';
+import type { CreateEmailResponse } from 'resend';
+import { isErrorWithMessage, ValidationError, isValidEmail } from '../types/utils';
+import { API } from '../types/constants';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+interface EmailMetadata {
+  documentType: string;
+  processId: string;
+  timestamp: string;
+  [key: string]: string | number | boolean;
+}
 
 interface EmailData {
   documentType: string;
-  metadata: any;
+  metadata: EmailMetadata;
   extractedText: string;
   processId: string;
+  recipient?: string;
 }
 
-export async function sendDocumentNotification(data: EmailData) {
+interface EmailResult {
+  success: boolean;
+  messageId?: string;
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+}
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export async function sendProcessingNotification(data: EmailData): Promise<EmailResult> {
+  // Validiere E-Mail-Empfänger
+  const recipient = data.recipient ?? 'processing@swiss-insurance.ch';
+  if (!isValidEmail(recipient)) {
+    throw new ValidationError('Ungültige E-Mail-Adresse', 'recipient');
+  }
+
   try {
-    const subject = `Neues Dokument eingereicht: ${data.documentType}`;
+    const { documentType, metadata, extractedText, processId } = data;
     
-    // Erstelle eine Zusammenfassung basierend auf dem Dokumenttyp
-    let summary = '';
-    if (data.documentType === 'accident_report') {
-      const text = data.extractedText;
-      summary = `
-        Unfallbericht
-        -------------
-        Name: ${text.match(/Name[^:]*:\s*([^\n]+)/i)?.[1]?.trim() || 'Nicht angegeben'}
-        Datum: ${text.match(/(\d{1,2}\.\d{1,2}\.\d{4})/)?.[1] || 'Nicht angegeben'}
-        Unfallort: ${text.match(/Ort[^:]*:\s*([^\n]+)/i)?.[1]?.trim() || 'Nicht angegeben'}
-        Beschreibung: ${text.match(/(?:Unfallhergang|Beschreibung)[^:]*:\s*([^\n]+)/i)?.[1]?.trim() || 'Nicht angegeben'}
-      `;
-    } else if (data.documentType === 'contract_change') {
-      const text = data.extractedText;
-      summary = `
-        Vertragsänderung
-        ----------------
-        Name: ${text.match(/Name[^:]*:\s*([^\n]+)/i)?.[1]?.trim() || 'Nicht angegeben'}
-        Typ: ${text.toLowerCase().includes('kündigung') ? 'Kündigung' : 'Änderung'}
-        Datum: ${text.match(/(\d{1,2}\.\d{1,2}\.\d{4})/)?.[1] || 'Nicht angegeben'}
-      `;
-    } else {
-      summary = `
-        Dokument: ${data.documentType}
-        Prozess-ID: ${data.processId}
-        Zeitpunkt: ${new Date().toLocaleString()}
-      `;
+    const response: CreateEmailResponse = await resend.emails.send({
+      from: 'ocr@swiss-insurance.ch',
+      to: recipient,
+      subject: `Dokument verarbeitet: ${documentType} (${processId})`,
+      text: `
+        Neues Dokument verarbeitet:
+        Typ: ${documentType}
+        Prozess-ID: ${processId}
+        
+        Metadaten:
+        ${Object.entries(metadata)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join('\n')}
+        
+        Extrahierter Text:
+        ${extractedText}
+      `.trim()
+    });
+
+    return {
+      success: true,
+      messageId: response.data?.id
+    };
+  } catch (error) {
+    if (isErrorWithMessage(error)) {
+      console.error('E-Mail-Versand fehlgeschlagen:', error);
+      
+      return {
+        success: false,
+        error: {
+          code: 'EMAIL_SEND_FAILED',
+          message: error.message,
+          details: error
+        }
+      };
     }
 
-    const html = `
-      <h2>Neues Dokument wurde eingereicht</h2>
-      <p>Ein neues Dokument wurde erfolgreich verarbeitet und gespeichert.</p>
-      <pre>${summary}</pre>
-      <p>Prozess-ID: ${data.processId}</p>
-      <p>Zeitpunkt: ${new Date().toLocaleString()}</p>
-      <hr>
-      <p><small>Dies ist eine automatisch generierte Nachricht.</small></p>
-    `;
-
-    console.log('Sende E-Mail mit folgenden Details:', {
-      to: 'wehrlinatasha@gmail.com',
-      subject,
-      apiKeyLength: process.env.RESEND_API_KEY?.length || 0,
-      hasApiKey: !!process.env.RESEND_API_KEY
-    });
-
-    const response = await resend.emails.send({
-      from: 'Resend <onboarding@resend.dev>',
-      to: 'wehrlinatasha@gmail.com',
-      subject,
-      html
-    });
-
-    console.log('Resend API Antwort:', response);
-    return true;
-  } catch (error: any) {
-    console.error('Detaillierter E-Mail-Fehler:', {
-      message: error.message,
-      name: error.name,
-      stack: error.stack,
-      details: error.details || 'Keine weiteren Details verfügbar'
-    });
-    return false;
+    return {
+      success: false,
+      error: {
+        code: 'UNKNOWN_ERROR',
+        message: 'Ein unbekannter Fehler ist aufgetreten'
+      }
+    };
   }
 } 

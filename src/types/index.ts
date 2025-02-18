@@ -1,26 +1,34 @@
 export type SupportedLanguages = 'de' | 'fr' | 'it' | 'en';
+export type Urgency = 'low' | 'medium' | 'high';
+export type DocumentStatus = 'pending' | 'verified' | 'rejected';
+export type ProcessingStatus = 'uploading' | 'processing' | 'completed' | 'error';
+export type AppointmentType = 'initial_consultation' | 'followup' | 'claim_support';
+export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled';
 
-export interface Message {
+export interface BaseEntity {
   id: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface Message extends BaseEntity {
   content: string;
   role: 'user' | 'assistant';
-  created_at: string;
   attachments?: string[];
   intent?: string;
   sentiment?: string;
   language?: SupportedLanguages;
 }
 
-export interface Attachment {
-  id: string;
+export interface Attachment extends BaseEntity {
   fileName: string;
   fileType: string;
   fileSize: number;
   url: string;
+  metadata?: Record<string, unknown>;
 }
 
-export interface FAQ {
-  id: string;
+export interface FAQ extends BaseEntity {
   question: string;
   answer: string;
   category: string;
@@ -28,6 +36,8 @@ export interface FAQ {
     question: string;
     answer: string;
   }>;
+  tags?: string[];
+  lastUpdated: string;
 }
 
 // Fügen wir neue Types für die Intent-Erkennung hinzu
@@ -43,18 +53,28 @@ export type IntentCategory =
   | 'EMERGENCY'     // Notfälle
   | 'TECHNICAL';    // Technische Probleme
 
-export interface Intent {
+export type EntityType = 
+  | 'insurance_type'
+  | 'document_type'
+  | 'action'
+  | 'location'
+  | 'date'
+  | 'amount'
+  | 'person';
+
+export interface Intent extends BaseEntity {
   category: IntentCategory;
   confidence: number;
   subCategory?: string;
   entities: IntentEntity[];
-  urgency: 'low' | 'medium' | 'high';
+  urgency: Urgency;
 }
 
 export interface IntentEntity {
-  type: 'insurance_type' | 'document_type' | 'action' | 'location' | 'date' | 'amount' | 'person';
+  type: EntityType;
   value: string;
   confidence: number;
+  metadata?: Record<string, unknown>;
 }
 
 // Erweiterte IntentPatterns für mehrsprachige Unterstützung
@@ -75,24 +95,24 @@ export interface IntentPatterns {
   // weitere Pattern-Typen...
 }
 
-export interface IntentPattern {
+export interface IntentPattern extends BaseEntity {
   intent: string;
   patterns: string[];
-  responses?: Record<SupportedLanguages, string>;
+  responses: Partial<Record<SupportedLanguages, string>>;
+  priority?: number;
+  isActive: boolean;
 }
 
-export interface CustomerProfile {
-  id: string;
+export interface CustomerProfile extends BaseEntity {
   user_id: string;
   first_name: string;
   last_name: string;
   email: string;
   phone?: string;
   address?: string;
-  preferred_language: 'de' | 'en' | 'fr' | 'it';
+  preferred_language: SupportedLanguages;
   insurance_interests?: InsuranceType[];
-  created_at: string;
-  updated_at: string;
+  metadata?: Record<string, unknown>;
 }
 
 export type InsuranceType = 
@@ -102,29 +122,31 @@ export type InsuranceType =
   | 'liability' 
   | 'vehicle';
 
-export interface Document {
-  id: string;
+export interface Document extends BaseEntity {
   user_id: string;
   filename: string;
   file_type: string;
   size: number;
   document_type: 'identification' | 'insurance_policy' | 'claim' | 'other';
-  status: 'pending' | 'verified' | 'rejected';
+  status: DocumentStatus;
   upload_date: string;
   verification_date?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
+  tags?: string[];
+  version?: number;
 }
 
-export interface Appointment {
-  id: string;
+export interface Appointment extends BaseEntity {
   user_id: string;
   advisor_id: string;
-  type: 'initial_consultation' | 'followup' | 'claim_support';
-  status: 'scheduled' | 'completed' | 'cancelled';
+  type: AppointmentType;
+  status: AppointmentStatus;
   datetime: string;
+  duration?: number; // in minutes
   notes?: string;
-  created_at: string;
-  updated_at: string;
+  location?: string;
+  virtual?: boolean;
+  reminder_sent?: boolean;
 }
 
 // Neue Typen für die Datenerfassung
@@ -140,6 +162,8 @@ export interface UserContactData {
   name: string;
   email: string;
   phone: string;
+  preferred_contact?: 'email' | 'phone';
+  contact_time?: 'morning' | 'afternoon' | 'evening';
 }
 
 export interface DataCollectionState {
@@ -147,10 +171,12 @@ export interface DataCollectionState {
   data: Partial<UserContactData>;
   confirmed: boolean;
   retries: number;
+  lastUpdated: string;
+  validationErrors?: string[];
 }
 
 // Erweitern der bestehenden ChatSession Interface
-export interface ChatSession {
+export interface ChatSession extends BaseEntity {
   session_id: string;
   messages: Message[];
   context: {
@@ -161,34 +187,32 @@ export interface ChatSession {
     contact_info?: UserContactData;
     data_collection?: DataCollectionState;
   };
-  created_at: string;
   expires_at: string;
   gdpr_accepted: boolean;
+  metadata?: Record<string, unknown>;
 }
 
-export interface TemporaryDocument {
-  id: string;
+export interface TemporaryDocument extends BaseEntity {
   session_id: string;
   filename: string;
   file_type: string;
   size: number;
   purpose: 'claim' | 'identification' | 'other';
   upload_date: string;
-  expires_at: string;  // Automatisches Löschdatum
-  processing_status: 'uploading' | 'processing' | 'completed' | 'error';
+  expires_at: string;
+  processing_status: ProcessingStatus;
+  error_message?: string;
+  progress?: number;
 }
 
-export interface AppointmentRequest {
+export interface AppointmentRequest extends BaseEntity {
   session_id: string;
   preferred_date: string[];
-  contact: {
-    name: string;
-    email: string;
-    phone?: string;
-  };
+  contact: Required<Pick<UserContactData, 'name' | 'email'>> & Partial<Pick<UserContactData, 'phone'>>;
   topic: string;
   insurance_type?: InsuranceType;
   preferred_language: SupportedLanguages;
   notes?: string;
-  created_at: string;
+  status: 'pending' | 'confirmed' | 'rejected';
+  priority?: Urgency;
 } 

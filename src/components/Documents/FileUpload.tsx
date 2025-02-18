@@ -1,78 +1,110 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
+import { ValidationError } from '../../types/utils';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
-interface FileUploadProps {
+export interface FileUploadProps {
   onUpload: (file: File) => Promise<void>;
   allowedTypes: string[];
   maxSize: number;
-  documentType: string;
+  disabled?: boolean;
+  className?: string;
+  documentType?: string;
 }
 
 export default function FileUpload({
   onUpload,
   allowedTypes,
   maxSize,
-  documentType
+  disabled = false,
+  className = '',
+  documentType = 'default'
 }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const validateFile = (file: File): string | null => {
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!disabled) {
+      setIsDragging(true);
+    }
+  }, [disabled]);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const validateFile = useCallback((file: File) => {
     if (!allowedTypes.includes(file.type)) {
-      return `Nur ${allowedTypes.map(type => type.split('/')[1].toUpperCase()).join(', ')} Dateien sind erlaubt.`;
+      throw new ValidationError(
+        'Nicht unterstützter Dateityp',
+        'file',
+        'INVALID_FILE_TYPE'
+      );
     }
 
     if (file.size > maxSize) {
-      return `Die Datei darf nicht größer als ${Math.round(maxSize / 1024 / 1024)}MB sein.`;
+      throw new ValidationError(
+        'Datei ist zu groß',
+        'file',
+        'FILE_TOO_LARGE'
+      );
     }
+  }, [allowedTypes, maxSize]);
 
-    return null;
-  };
-
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
+    e.stopPropagation();
     setIsDragging(false);
-  }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
+    if (disabled) return;
+
     const file = e.dataTransfer.files[0];
     if (!file) return;
 
-    const validationError = validateFile(file);
-    if (validationError) {
-      setError(validationError);
-      return;
+    try {
+      validateFile(file);
+      await onUpload(file);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        // Die Fehlerbehandlung wird von der übergeordneten Komponente übernommen
+        throw error;
+      }
+      throw new Error('Fehler beim Datei-Upload');
     }
+  }, [disabled, onUpload, validateFile]);
 
-    setError(null);
-    setSelectedFile(file);
-  }, [allowedTypes, maxSize]);
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validationError = validateFile(file);
-    if (validationError) {
-      setError(validationError);
-      return;
+    try {
+      validateFile(file);
+      await onUpload(file);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        // Die Fehlerbehandlung wird von der übergeordneten Komponente übernommen
+        throw error;
+      }
+      throw new Error('Fehler beim Datei-Upload');
+    } finally {
+      // Reset input
+      e.target.value = '';
     }
-
-    setError(null);
-    setSelectedFile(file);
-  }, [allowedTypes, maxSize]);
+  }, [disabled, onUpload, validateFile]);
 
   const handleUploadClick = useCallback(async () => {
     if (!selectedFile || isUploading) return;
@@ -91,58 +123,55 @@ export default function FileUpload({
   }, [selectedFile, isUploading, onUpload]);
 
   return (
-    <div className="w-full">
-      <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-          ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-500'}
-          ${error ? 'border-red-500 bg-red-50' : ''}
-          ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <input
-          type="file"
-          accept={allowedTypes.join(',')}
-          onChange={handleFileSelect}
-          className="hidden"
-          id={`fileInput-${documentType}`}
-          disabled={isUploading}
-        />
-        <label 
-          htmlFor={`fileInput-${documentType}`} 
-          className={`cursor-pointer ${isUploading ? 'cursor-not-allowed' : ''}`}
+    <div
+      className={`relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer
+        ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
+        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+        ${className}
+      `}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      role="button"
+      aria-label="Datei hochladen"
+    >
+      <input
+        type="file"
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        onChange={handleFileSelect}
+        accept={allowedTypes.join(',')}
+        disabled={disabled}
+        aria-label="Datei hochladen"
+        id={`fileInput-${documentType}`}
+      />
+      <div className="space-y-1 text-center">
+        <svg
+          className="mx-auto h-12 w-12 text-gray-400"
+          stroke="currentColor"
+          fill="none"
+          viewBox="0 0 48 48"
+          aria-hidden="true"
         >
-          {isUploading ? (
-            <div className="flex flex-col items-center">
-              <LoadingSpinner size="lg" />
-              <p className="mt-2 text-sm text-gray-600">Wird hochgeladen...</p>
-            </div>
-          ) : (
-            <>
-              <svg 
-                className="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-              <p className="mt-2 text-sm text-gray-600">
-                Ziehen Sie eine Datei hierher oder klicken Sie zum Auswählen
-              </p>
-              <p className="mt-1 text-xs text-gray-500">
-                {allowedTypes.map(type => type.split('/')[1].toUpperCase()).join(', ')} bis {Math.round(maxSize / 1024 / 1024)}MB
-              </p>
-            </>
-          )}
-        </label>
+          <path
+            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <div className="text-sm text-gray-600">
+          <label
+            htmlFor={`fileInput-${documentType}`}
+            className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+          >
+            <span>Datei hochladen</span>
+          </label>
+          <p className="pl-1">oder hierher ziehen</p>
+        </div>
+        <p className="text-xs text-gray-500">
+          {allowedTypes.map(type => type.split('/')[1]).join(', ')} bis zu {(maxSize / (1024 * 1024)).toFixed(0)} MB
+        </p>
       </div>
 
       {error && (

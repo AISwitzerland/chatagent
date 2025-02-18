@@ -1,20 +1,38 @@
 import { supabase } from './supabaseClient';
 import { ProcessingError } from '../agents/documentProcessor/utils';
-import { DocumentStatus } from '../types/database';
+import { DocumentStatus, Document } from '../types/index';
 import { DocumentClassifier } from './documentClassifier';
 import { OcrService } from '../agents/documentProcessor/ocr/ocrService';
 import { ProcessingManager } from './processingManager';
+import { isErrorWithMessage, ValidationError, isDefined } from '../types/utils';
+import { ALLOWED_FILE_TYPES, MAX_FILE_SIZE } from '../types/constants';
 
 export interface UploadResult {
   success: boolean;
   documentId?: string;
-  error?: string;
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
   path?: string;
   processId?: string;
   classification?: {
     type: string;
     confidence: number;
   };
+}
+
+export interface DocumentMetadata {
+  originalName: string;
+  size: number;
+  mimeType: string;
+  uploadedBy: {
+    name: string;
+    email: string;
+  };
+  uploadedAt: string;
+  [key: string]: unknown;
 }
 
 export class DocumentService {
@@ -41,12 +59,40 @@ export class DocumentService {
     userData: { name: string; email: string }
   ): Promise<UploadResult> {
     try {
+      // Validiere Dateityp
+      if (!ALLOWED_FILE_TYPES.all.includes(file.type)) {
+        throw new ValidationError(
+          'Nicht unterstützter Dateityp',
+          'file',
+          'INVALID_FILE_TYPE'
+        );
+      }
+
+      // Validiere Dateigröße
+      if (file.size > MAX_FILE_SIZE) {
+        throw new ValidationError(
+          'Datei ist zu groß',
+          'file',
+          'FILE_TOO_LARGE'
+        );
+      }
+
+      // Erstelle Metadata
+      const metadata: DocumentMetadata = {
+        originalName: file.name,
+        size: file.size,
+        mimeType: file.type,
+        uploadedBy: userData,
+        uploadedAt: new Date().toISOString()
+      };
+
       // Erstelle ein Document-Objekt für die Verarbeitung
       const document = {
         file: await file.arrayBuffer().then(buffer => Buffer.from(buffer)),
         fileName: file.name,
         mimeType: file.type,
-        fileSize: file.size
+        fileSize: file.size,
+        metadata
       };
 
       // Starte die asynchrone Verarbeitung
@@ -57,16 +103,40 @@ export class DocumentService {
         processId
       };
 
-    } catch (error: any) {
-      console.error('Document upload error:', error);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        return {
+          success: false,
+          error: {
+            code: error.code,
+            message: error.message,
+            details: { field: error.field }
+          }
+        };
+      }
+
+      if (isErrorWithMessage(error)) {
+        console.error('Document upload error:', error);
+        return {
+          success: false,
+          error: {
+            code: 'UPLOAD_FAILED',
+            message: error.message
+          }
+        };
+      }
+
       return {
         success: false,
-        error: error.message || 'Fehler beim Hochladen des Dokuments'
+        error: {
+          code: 'UNKNOWN_ERROR',
+          message: 'Ein unbekannter Fehler ist aufgetreten'
+        }
       };
     }
   }
 
-  async getDocument(documentId: string) {
+  async getDocument(documentId: string): Promise<Document | null> {
     try {
       const { data, error } = await supabase
         .from('documents')
@@ -82,8 +152,10 @@ export class DocumentService {
 
       if (error) throw error;
       return data;
-    } catch (error: any) {
-      console.error('Error fetching document:', error);
+    } catch (error) {
+      if (isErrorWithMessage(error)) {
+        console.error('Error fetching document:', error);
+      }
       return null;
     }
   }
@@ -91,14 +163,14 @@ export class DocumentService {
   async updateDocumentStatus(
     documentId: string,
     status: DocumentStatus,
-    metadata?: any
-  ) {
+    metadata?: Record<string, unknown>
+  ): Promise<Document | null> {
     try {
       const { data, error } = await supabase
         .from('documents')
         .update({
           status,
-          ...(metadata ? { metadata } : {})
+          ...(isDefined(metadata) ? { metadata } : {})
         })
         .eq('id', documentId)
         .select()
@@ -106,8 +178,10 @@ export class DocumentService {
 
       if (error) throw error;
       return data;
-    } catch (error: any) {
-      console.error('Error updating document status:', error);
+    } catch (error) {
+      if (isErrorWithMessage(error)) {
+        console.error('Error updating document status:', error);
+      }
       return null;
     }
   }

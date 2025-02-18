@@ -12,6 +12,11 @@ import {
 import DocumentUpload from '../DocumentUpload/DocumentUpload';
 import ChatInput from './ChatInput';
 
+interface ChatError extends Error {
+  code?: string;
+  details?: unknown;
+}
+
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -23,6 +28,7 @@ export default function ChatWidget() {
     }
   ]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Ref für automatisches Scrollen
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -71,67 +77,67 @@ export default function ChatWidget() {
     setMessages(prev => [...prev, errorMsg]);
   }, []);
 
-  const handleDataCollection = useCallback(async (content: string) => {
+  const addMessage = useCallback((message: Omit<Message, 'id' | 'created_at'>) => {
+    const newMessage: Message = {
+      ...message,
+      id: Date.now().toString(),
+      created_at: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, newMessage]);
+    return newMessage;
+  }, []);
+
+  const handleDataCollection = useCallback(async (content: string): Promise<void> => {
+    if (!content.trim()) return;
+
     const updatedState = updateDataCollectionState(dataCollection, content);
     
     // Validierungsfehler behandeln
     const validationError = validateInput(dataCollection.step, content);
     if (validationError) {
-      const errorMessage: Message = {
-        id: Date.now().toString(),
+      addMessage({
         content: validationError,
-        role: 'assistant',
-        created_at: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+        role: 'assistant'
+      });
       return;
     }
 
     // Benutzereingabe zur Nachrichtenliste hinzufügen
-    const userMessage: Message = {
-      id: Date.now().toString(),
+    addMessage({
       content,
-      role: 'user',
-      created_at: new Date().toISOString()
-    };
-    setMessages(prev => [...prev, userMessage]);
+      role: 'user'
+    });
 
     // Nächste Nachricht vom Assistenten
     const nextPrompt = getNextPrompt(updatedState.step, updatedState.data);
     if (nextPrompt) {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+      addMessage({
         content: nextPrompt,
-        role: 'assistant',
-        created_at: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, assistantMessage]);
+        role: 'assistant'
+      });
     }
 
     setDataCollection(updatedState);
-  }, [dataCollection]);
+  }, [dataCollection, addMessage]);
 
-  const handleSendMessage = useCallback(async (content: string) => {
-    if (!content.trim()) return;
+  const handleSendMessage = useCallback(async (content: string): Promise<void> => {
+    if (!content.trim() || loading) return;
 
     setLoading(true);
+    setError(null);
+
     try {
       // Wenn wir uns im Datenerfassungsmodus befinden
       if (dataCollection.step !== 'idle' && dataCollection.step !== 'ready_for_upload') {
         await handleDataCollection(content);
-        setLoading(false);
         return;
       }
 
       // Normale Chat-Nachricht
-      const userMessage: Message = {
-        id: Date.now().toString(),
+      const userMessage = addMessage({
         content,
-        role: 'user',
-        created_at: new Date().toISOString()
-      };
-      
-      setMessages(prev => [...prev, userMessage]);
+        role: 'user'
+      });
 
       // Prüfen ob Dokumenten-Upload gestartet werden soll
       if (content.toLowerCase().includes('dokument') || content.toLowerCase().includes('upload')) {
@@ -142,37 +148,45 @@ export default function ChatWidget() {
           retries: 0
         });
         
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
+        addMessage({
           content: getNextPrompt('collecting_name', {}),
-          role: 'assistant',
-          created_at: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, assistantMessage]);
+          role: 'assistant'
+        });
       } else {
-        // Normale OpenAI Antwort
-        const aiResponse = await generateChatResponse([...messages, userMessage]);
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content: aiResponse,
-          role: 'assistant',
-          created_at: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, assistantMessage]);
+        try {
+          // Normale OpenAI Antwort
+          const aiResponse = await generateChatResponse([...messages, userMessage]);
+          addMessage({
+            content: aiResponse,
+            role: 'assistant'
+          });
+        } catch (error) {
+          const chatError = error as ChatError;
+          console.error('OpenAI-Fehler:', {
+            message: chatError.message,
+            code: chatError.code,
+            details: chatError.details
+          });
+          setError('Entschuldigung, es gab einen Fehler bei der Verarbeitung Ihrer Nachricht.');
+          
+          addMessage({
+            content: 'Entschuldigung, ich konnte Ihre Anfrage nicht verarbeiten. Bitte versuchen Sie es später erneut.',
+            role: 'assistant'
+          });
+        }
       }
     } catch (error) {
-      console.error('Chat Error:', error);
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        content: 'Entschuldigung, es gab einen Fehler. Bitte versuchen Sie es später erneut.',
-        role: 'assistant',
-        created_at: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      const chatError = error as ChatError;
+      console.error('Chat-Fehler:', {
+        message: chatError.message,
+        code: chatError.code,
+        details: chatError.details
+      });
+      setError('Ein unerwarteter Fehler ist aufgetreten.');
     } finally {
       setLoading(false);
     }
-  }, [messages, dataCollection]);
+  }, [messages, dataCollection, loading, handleDataCollection, addMessage]);
 
   const toggleChat = useCallback(() => {
     setIsOpen(prev => !prev);
@@ -208,7 +222,7 @@ export default function ChatWidget() {
             </button>
           </div>
 
-          {/* Messages mit Scroll-Ref */}
+          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
               <div
@@ -228,6 +242,7 @@ export default function ChatWidget() {
                 </div>
               </div>
             ))}
+            
             {loading && (
               <div className="flex justify-start">
                 <div className="bg-gray-100 rounded-lg p-3">
@@ -236,6 +251,14 @@ export default function ChatWidget() {
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
                   </div>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="flex justify-center">
+                <div className="bg-red-100 text-red-700 rounded-lg p-3 text-sm">
+                  {error}
                 </div>
               </div>
             )}

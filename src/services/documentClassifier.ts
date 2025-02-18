@@ -1,12 +1,27 @@
 import { Database } from '../types/database';
 import OpenAI from 'openai';
+import { isNonEmptyString, ValidationError, isErrorWithMessage } from '../types/utils';
+import { API } from '../types/constants';
 
 export type DocumentType = 'accident_report' | 'damage_report' | 'contract_change' | 'miscellaneous';
 
 export interface ClassificationResult {
   type: DocumentType;
   confidence: number;
-  extractedData: Record<string, any>;
+  extractedData: Record<string, unknown>;
+  metadata: {
+    modelUsed: string;
+    processingTime: number;
+    timestamp: string;
+  };
+}
+
+interface ExtractedData {
+  dates?: string[];
+  location?: string;
+  damageType?: string;
+  changeType?: string;
+  [key: string]: unknown;
 }
 
 export class DocumentClassifier {
@@ -30,32 +45,59 @@ export class DocumentClassifier {
   }
 
   public async classifyDocument(text: string): Promise<ClassificationResult> {
-    if (!text) {
-      throw new Error('Empty or invalid input');
+    if (!isNonEmptyString(text)) {
+      throw new ValidationError('Leerer oder ungültiger Text', 'text');
     }
+
+    const startTime = Date.now();
 
     try {
       const initialClassification = this.performInitialClassification(text);
       
       // If in test mode or no OpenAI client, return initial classification
       if (this.isTestMode || !this.openai) {
-        return initialClassification;
+        return {
+          ...initialClassification,
+          metadata: {
+            modelUsed: 'rule-based',
+            processingTime: Date.now() - startTime,
+            timestamp: new Date().toISOString()
+          }
+        };
       }
 
       // Only use GPT for low confidence results
       if (initialClassification.confidence < 0.8) {
         const gptResult = await this.classifyWithGPT(text);
-        return this.combineResults(initialClassification, gptResult);
+        const combinedResult = this.combineResults(initialClassification, gptResult);
+        return {
+          ...combinedResult,
+          metadata: {
+            modelUsed: 'gpt-4',
+            processingTime: Date.now() - startTime,
+            timestamp: new Date().toISOString()
+          }
+        };
       }
 
-      return initialClassification;
+      return {
+        ...initialClassification,
+        metadata: {
+          modelUsed: 'rule-based',
+          processingTime: Date.now() - startTime,
+          timestamp: new Date().toISOString()
+        }
+      };
     } catch (error) {
-      console.error('Fehler bei der Dokumentenklassifizierung:', error);
-      throw error;
+      if (isErrorWithMessage(error)) {
+        console.error('Fehler bei der Dokumentenklassifizierung:', error);
+        throw new Error(`Klassifizierungsfehler: ${error.message}`);
+      }
+      throw new Error('Unbekannter Fehler bei der Dokumentenklassifizierung');
     }
   }
 
-  private performInitialClassification(text: string): ClassificationResult {
+  private performInitialClassification(text: string): Omit<ClassificationResult, 'metadata'> {
     const normalizedText = text.toLowerCase();
     
     // Keywords für verschiedene Dokumenttypen mit Gewichtung
@@ -110,7 +152,7 @@ export class DocumentClassifier {
     };
   }
 
-  private async classifyWithGPT(text: string): Promise<ClassificationResult> {
+  private async classifyWithGPT(text: string): Promise<Omit<ClassificationResult, 'metadata'>> {
     if (!this.openai) {
       throw new Error('OpenAI client not initialized');
     }
@@ -130,18 +172,25 @@ export class DocumentClassifier {
       }
     }`;
 
-    const response = await this.openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.3,
-    });
+    try {
+      const response = await this.openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
+      });
 
-    const result = JSON.parse(response.choices[0].message.content || '{}');
-    return result as ClassificationResult;
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+      return result as Omit<ClassificationResult, 'metadata'>;
+    } catch (error) {
+      if (isErrorWithMessage(error)) {
+        throw new Error(`GPT-Klassifizierungsfehler: ${error.message}`);
+      }
+      throw new Error('Unbekannter Fehler bei der GPT-Klassifizierung');
+    }
   }
 
-  private extractDataByRules(text: string, type: DocumentType): Record<string, any> {
-    const data: Record<string, any> = {};
+  private extractDataByRules(text: string, type: DocumentType): ExtractedData {
+    const data: ExtractedData = {};
     
     // Datum-Extraktion (Format: DD.MM.YYYY)
     const dateRegex = /(\d{2})\.(\d{2})\.(\d{4})/g;
@@ -180,21 +229,18 @@ export class DocumentClassifier {
     return data;
   }
 
-  private combineResults(initial: ClassificationResult, gpt: ClassificationResult): ClassificationResult {
-    // Wenn GPT sehr sicher ist (> 0.9), verwende GPT-Ergebnis
-    if (gpt.confidence > 0.9) {
+  private combineResults(
+    initial: Omit<ClassificationResult, 'metadata'>,
+    gpt: Omit<ClassificationResult, 'metadata'>
+  ): Omit<ClassificationResult, 'metadata'> {
+    // Wenn GPT eine höhere Konfidenz hat, verwende dessen Klassifizierung
+    if (gpt.confidence > initial.confidence) {
       return gpt;
     }
 
-    // Wenn initial sehr sicher ist (> 0.8), verwende initiales Ergebnis
-    if (initial.confidence > 0.8) {
-      return initial;
-    }
-
-    // Ansonsten kombiniere die Ergebnisse
+    // Ansonsten kombiniere die extrahierten Daten
     return {
-      type: gpt.confidence > initial.confidence ? gpt.type : initial.type,
-      confidence: Math.max(initial.confidence, gpt.confidence),
+      ...initial,
       extractedData: {
         ...initial.extractedData,
         ...gpt.extractedData

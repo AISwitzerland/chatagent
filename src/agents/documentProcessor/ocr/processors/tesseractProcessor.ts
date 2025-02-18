@@ -1,8 +1,14 @@
-import { createWorker, WorkerOptions } from 'tesseract.js';
+import { createWorker } from 'tesseract.js';
 import { OcrProcessor, OcrResult, OcrOptions, OcrProcessorType } from '../types';
 import { ProcessingError } from '../../utils';
 import { performance } from 'perf_hooks';
 import { imagePreprocessor } from '../utils/imagePreprocessor';
+import { randomUUID } from 'crypto';
+
+interface TesseractError extends Error {
+  code?: string;
+  details?: unknown;
+}
 
 export class TesseractProcessor implements OcrProcessor {
   private worker: Awaited<ReturnType<typeof createWorker>> | null = null;
@@ -15,8 +21,6 @@ export class TesseractProcessor implements OcrProcessor {
     try {
       if (!this.worker) {
         this.worker = await createWorker();
-        
-        // Initialisiere die deutsche Sprache
         await this.worker.reinitialize('deu');
       }
       return true;
@@ -29,21 +33,21 @@ export class TesseractProcessor implements OcrProcessor {
   async processImage(image: Buffer, options: OcrOptions): Promise<OcrResult> {
     const startTime = performance.now();
 
-    try {
-      if (!this.worker) {
-        throw new ProcessingError(
-          'Tesseract Worker nicht initialisiert',
-          'tesseract-processing',
-          null
-        );
-      }
+    if (!this.worker) {
+      throw new ProcessingError(
+        'Tesseract Worker nicht initialisiert',
+        'WORKER_NOT_INITIALIZED',
+        null
+      );
+    }
 
+    try {
       const { processedImage, metadata } = await imagePreprocessor.preprocessImage(
         image,
         {
-          mimeType: options.documentContext?.mimeType || 'image/jpeg',
-          enhanceImage: options.enhanceImage,
-          minQuality: options.minQuality
+          mimeType: options.documentContext?.mimeType ?? 'image/jpeg',
+          enhanceImage: options.enhanceImage ?? true,
+          minQuality: options.minQuality ?? 0.7
         }
       );
 
@@ -61,10 +65,10 @@ export class TesseractProcessor implements OcrProcessor {
         processingTime,
         processor: this.getName(),
         context: {
-          processId: crypto.randomUUID(),
-          fileName: options.documentContext?.fileName || 'unknown',
-          mimeType: options.documentContext?.mimeType || 'unknown',
-          fileSize: options.documentContext?.fileSize || 0,
+          processId: randomUUID(),
+          fileName: options.documentContext?.fileName ?? 'unknown',
+          mimeType: options.documentContext?.mimeType ?? 'unknown',
+          fileSize: options.documentContext?.fileSize ?? 0,
           startedAt: new Date().toISOString(),
           metadata: {
             ocrProcessor: this.getName(),
@@ -73,11 +77,16 @@ export class TesseractProcessor implements OcrProcessor {
           }
         }
       };
-    } catch (error: any) {
+    } catch (error) {
+      const tesseractError = error as TesseractError;
       throw new ProcessingError(
-        `Tesseract Verarbeitungsfehler: ${error.message}`,
-        'tesseract-processing',
-        error
+        `Tesseract Verarbeitungsfehler: ${tesseractError.message}`,
+        'TESSERACT_PROCESSING_ERROR',
+        {
+          originalError: tesseractError,
+          code: tesseractError.code,
+          details: tesseractError.details
+        }
       );
     }
   }

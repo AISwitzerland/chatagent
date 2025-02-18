@@ -1,7 +1,13 @@
+export interface LogMessage {
+  status: string;
+  progress?: number;
+  message?: string;
+}
+
 export const OCR_CONFIG = {
   // GPT-4-Vision Konfiguration
   gptVision: {
-    model: 'gpt-4o',
+    model: 'gpt-4-vision-preview',
     maxTokens: 4096,
     temperature: 0.3,
     systemPrompt: `Du bist ein Experte für Dokumentenanalyse. 
@@ -14,7 +20,7 @@ export const OCR_CONFIG = {
     languages: ['deu', 'eng'],
     workerPath: 'https://unpkg.com/tesseract.js@v5.0.3/dist/worker.min.js',
     corePath: 'https://unpkg.com/tesseract.js-core@v5.0.3/tesseract-core.wasm.js',
-    logger: (message: any) => console.log(message)
+    logger: (message: LogMessage): void => console.log(message)
   },
 
   // Unterstützte Dateitypen

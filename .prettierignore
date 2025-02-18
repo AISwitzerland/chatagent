@@ -1,0 +1,21 @@
+# Build outputs
+dist/
+.next/
+node_modules/
+coverage/
+
+# Generated files
+*.generated.ts
+*.generated.tsx
+
+# Package files
+package-lock.json
+yarn.lock
+
+# Config files
+.eslintrc.json
+tsconfig.json
+
+# Other
+.git
+.husky 

@@ -1,0 +1,20 @@
+# Build outputs
+dist/
+.next/
+node_modules/
+coverage/
+*.js.map
+
+# Generated files
+*.generated.ts
+*.generated.tsx
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# Config files
+*.config.js
+next.config.js 
