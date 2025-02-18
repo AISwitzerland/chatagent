@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Message } from '../../types';
 import DocumentUpload from '../DocumentUpload/DocumentUpload';
+import ChatInput from './ChatInput';
 
 interface ChatWindowProps {
   onClose: () => void;
@@ -17,7 +18,6 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       created_at: new Date().toISOString()
     }
   ]);
-  const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
 
@@ -49,18 +49,17 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
     }]);
   };
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = async (message: string) => {
+    if (!message.trim()) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: inputMessage,
+      content: message,
       role: 'user',
       created_at: new Date().toISOString()
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
     setIsLoading(true);
 
     try {
@@ -176,35 +175,11 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
 
       {/* Input */}
       <div className="p-4 border-t">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder="Ihre Nachricht..."
-            className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || isLoading}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-              />
-            </svg>
-          </button>
-        </div>
+        <ChatInput
+          onSendMessage={handleSendMessage}
+          disabled={isLoading}
+          placeholder="Ihre Nachricht..."
+        />
       </div>
     </div>
   );
