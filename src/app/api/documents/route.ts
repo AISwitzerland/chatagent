@@ -3,7 +3,7 @@ import { DocumentAgent } from '../../../agents/documentProcessor';
 import { supabase } from '../../../services/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
-import { sendDocumentNotification } from '../../../services/emailService';
+import { sendProcessingNotification } from '../../../services/emailService';
 
 type DocumentStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -112,7 +112,7 @@ async function processDocument(processId: string, document: any, agent: Document
 
       // Sende E-Mail-Benachrichtigung
       if (result.documentType && result.data?.extractedText) {
-        await sendDocumentNotification({
+        await sendProcessingNotification({
           documentType: result.documentType,
           metadata: result.data || {},
           extractedText: result.data.extractedText,

@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { sendDocumentNotification } from '../../../services/emailService';
+import { sendProcessingNotification } from '../../../services/emailService';
 
 export async function GET(request: Request) {
   try {
     const testData = {
       documentType: 'accident_report',
       metadata: {
+        documentType: 'accident_report',
         processId: 'test-123',
         timestamp: new Date().toISOString()
       },
@@ -19,9 +20,9 @@ export async function GET(request: Request) {
       processId: 'test-123'
     };
 
-    const result = await sendDocumentNotification(testData);
+    const result = await sendProcessingNotification(testData);
 
-    if (result) {
+    if (result.success) {
       return NextResponse.json({
         success: true,
         message: 'Test-E-Mail wurde erfolgreich gesendet'

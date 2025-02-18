@@ -1,4 +1,4 @@
-import { Document, ProcessingResult, DocumentType, DocumentContext, ProcessingContext } from './types';
+import { Document, ProcessingResult, DocumentType, ProcessingContext } from './types';
 import { ProcessingError, logStep } from './utils';
 import { OcrService } from './ocr/ocrService';
 import { OcrResult, OcrOptions } from './ocr/types';
