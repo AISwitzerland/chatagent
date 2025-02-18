@@ -71,7 +71,21 @@ class ImagePreprocessor {
 
           // PDF zu PNG konvertieren
           const convert = fromPath(tempPdfPath, pdfOptions);
-          const result = await convert(1); // Erste Seite konvertieren
+          const conversionResult = await convert(1);
+          if (!conversionResult) {
+            throw new ProcessingError(
+              'PDF-Konvertierung fehlgeschlagen',
+              'pdf-conversion',
+              null
+            );
+          }
+
+          // Log erfolgreiche Konvertierung
+          console.log('PDF-Konvertierung erfolgreich:', {
+            page: conversionResult.page,
+            name: conversionResult.name,
+            size: conversionResult.size
+          });
 
           // Warte kurz, um sicherzustellen, dass die Datei geschrieben wurde
           await new Promise(resolve => setTimeout(resolve, 100));
