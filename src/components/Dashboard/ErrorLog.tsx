@@ -29,9 +29,9 @@ export default function ErrorLog() {
           event: 'INSERT',
           schema: 'public',
           table: 'processing_status',
-          filter: 'status=eq.failed'
+          filter: 'status=eq.failed',
         },
-        (payload) => {
+        payload => {
           if (payload.new) {
             const newError = payload.new as ErrorEntry;
             setErrors(prev => [newError, ...prev].slice(0, 50));
@@ -82,9 +82,7 @@ export default function ErrorLog() {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <h2 className="text-xl font-semibold mb-4">Fehlerprotokoll</h2>
-        <div className="p-4 text-red-700 bg-red-100 rounded-lg">
-          {error}
-        </div>
+        <div className="p-4 text-red-700 bg-red-100 rounded-lg">{error}</div>
       </div>
     );
   }
@@ -94,43 +92,33 @@ export default function ErrorLog() {
       <h2 className="text-xl font-semibold mb-4">
         Fehlerprotokoll
         {errors.length > 0 && (
-          <span className="ml-2 text-sm font-normal text-gray-500">
-            ({errors.length})
-          </span>
+          <span className="ml-2 text-sm font-normal text-gray-500">({errors.length})</span>
         )}
       </h2>
 
       {errors.length === 0 ? (
-        <div className="text-gray-500 text-center py-8">
-          Keine Fehler gefunden
-        </div>
+        <div className="text-gray-500 text-center py-8">Keine Fehler gefunden</div>
       ) : (
         <div className="space-y-4">
-          {errors.map((entry) => (
+          {errors.map(entry => (
             <div
               key={`${entry.process_id}-${entry.updated_at}`}
               className="border-l-4 border-red-500 pl-4 py-3"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="font-medium text-red-600">
-                    Fehler bei der Verarbeitung
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    {entry.message}
-                  </div>
+                  <div className="font-medium text-red-600">Fehler bei der Verarbeitung</div>
+                  <div className="text-sm text-gray-600 mt-1">{entry.message}</div>
                 </div>
                 <div className="text-sm text-gray-500">
                   {new Date(entry.updated_at).toLocaleString()}
                 </div>
               </div>
-              <div className="mt-2 text-xs text-gray-500">
-                Prozess-ID: {entry.process_id}
-              </div>
+              <div className="mt-2 text-xs text-gray-500">Prozess-ID: {entry.process_id}</div>
             </div>
           ))}
         </div>
       )}
     </div>
   );
-} 
+}

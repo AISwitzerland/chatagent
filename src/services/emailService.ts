@@ -39,7 +39,7 @@ export async function sendProcessingNotification(data: EmailData): Promise<Email
 
   try {
     const { documentType, metadata, extractedText, processId } = data;
-    
+
     const response: CreateEmailResponse = await resend.emails.send({
       from: 'ocr@swiss-insurance.ch',
       to: recipient,
@@ -56,24 +56,24 @@ export async function sendProcessingNotification(data: EmailData): Promise<Email
         
         Extrahierter Text:
         ${extractedText}
-      `.trim()
+      `.trim(),
     });
 
     return {
       success: true,
-      messageId: response.data?.id
+      messageId: response.data?.id,
     };
   } catch (error) {
     if (isErrorWithMessage(error)) {
       console.error('E-Mail-Versand fehlgeschlagen:', error);
-      
+
       return {
         success: false,
         error: {
           code: 'EMAIL_SEND_FAILED',
           message: error.message,
-          details: error
-        }
+          details: error,
+        },
       };
     }
 
@@ -81,8 +81,8 @@ export async function sendProcessingNotification(data: EmailData): Promise<Email
       success: false,
       error: {
         code: 'UNKNOWN_ERROR',
-        message: 'Ein unbekannter Fehler ist aufgetreten'
-      }
+        message: 'Ein unbekannter Fehler ist aufgetreten',
+      },
     };
   }
-} 
+}

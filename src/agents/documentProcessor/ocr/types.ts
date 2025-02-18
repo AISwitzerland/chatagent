@@ -106,4 +106,4 @@ export interface OcrProcessor {
   processImage(image: Buffer, options: OcrOptions): Promise<OcrResult>;
   /** Optional: Räumt Ressourcen auf */
   cleanup?(): Promise<void>;
-} 
+}

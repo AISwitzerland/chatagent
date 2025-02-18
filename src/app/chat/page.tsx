@@ -20,7 +20,7 @@ export default function ChatTest() {
         id: Date.now().toString(),
         content: input,
         role: 'user',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
       setMessages(prev => [...prev, userMessage]);
       setInput('');
@@ -33,7 +33,7 @@ export default function ChatTest() {
         id: (Date.now() + 1).toString(),
         content: response,
         role: 'assistant',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
@@ -47,15 +47,15 @@ export default function ChatTest() {
   return (
     <div className="max-w-2xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Chat Test</h1>
-      
+
       {/* Nachrichten-Bereich */}
       <div className="space-y-4 mb-4 h-[60vh] overflow-y-auto">
-        {messages.map((message) => (
+        {messages.map(message => (
           <div
             key={message.id}
             className={`p-4 rounded-lg ${
-              message.role === 'user' 
-                ? 'bg-blue-100 ml-auto max-w-[80%]' 
+              message.role === 'user'
+                ? 'bg-blue-100 ml-auto max-w-[80%]'
                 : 'bg-gray-100 mr-auto max-w-[80%]'
             }`}
           >
@@ -76,7 +76,7 @@ export default function ChatTest() {
         <input
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={e => setInput(e.target.value)}
           placeholder="Schreiben Sie eine Nachricht..."
           className="flex-1 p-2 border rounded"
           disabled={loading}
@@ -91,4 +91,4 @@ export default function ChatTest() {
       </form>
     </div>
   );
-} 
+}

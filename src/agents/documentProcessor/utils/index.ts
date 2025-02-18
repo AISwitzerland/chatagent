@@ -10,15 +10,15 @@ export class ProcessingError extends Error {
   ) {
     super(message);
     this.name = 'ProcessingError';
-    
+
     // Wichtig für die korrekte Prototyp-Verkettung
     Object.setPrototypeOf(this, ProcessingError.prototype);
-    
+
     // Stelle sicher, dass die message-Eigenschaft korrekt gesetzt ist
     Object.defineProperty(this, 'message', {
       get() {
         return message;
-      }
+      },
     });
   }
-} 
+}

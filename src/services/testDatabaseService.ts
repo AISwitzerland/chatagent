@@ -3,8 +3,11 @@ import { supabase } from './supabaseClient';
 export async function testDatabaseConnection() {
   try {
     // Hole aktuelle Session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
     if (sessionError) {
       console.error('Session-Fehler:', sessionError);
       throw sessionError;
@@ -24,7 +27,7 @@ export async function testDatabaseConnection() {
       console.error('Verbindungsfehler:', connectionError);
       throw connectionError;
     }
-    
+
     console.log('✅ Verbindung erfolgreich');
 
     // 2. Test: Document erstellen
@@ -37,7 +40,7 @@ export async function testDatabaseConnection() {
         document_type: 'vertrag',
         status: 'eingereicht',
         metadata: { test: true },
-        uploaded_by: session.user.id
+        uploaded_by: session.user.id,
       })
       .select()
       .single();
@@ -46,7 +49,7 @@ export async function testDatabaseConnection() {
       console.error('Dokument-Fehler:', documentError);
       throw documentError;
     }
-    
+
     console.log('✅ Document erstellt:', document.id);
 
     // 2. Accident Report erstellen
@@ -62,7 +65,7 @@ export async function testDatabaseConnection() {
         unfall_ort: 'Musterstraße 123',
         unfall_beschreibung: 'Testeintrag für Unfallbericht',
         verletzung_art: 'Testbeschreibung der Verletzung',
-        verletzung_koerperteil: 'Hand'
+        verletzung_koerperteil: 'Hand',
       })
       .select()
       .single();
@@ -82,7 +85,7 @@ export async function testDatabaseConnection() {
         name: 'Max Mustermann',
         email: session.user.email!,
         telefon: '+41 123 456 789',
-        notizen: 'Testtermin für Beratungsgespräch'
+        notizen: 'Testtermin für Beratungsgespräch',
       })
       .select()
       .single();
@@ -104,14 +107,16 @@ export async function testDatabaseConnection() {
         aenderung_typ: 'anpassung',
         aenderung_beschreibung: 'Umzug in neue Wohnung',
         zusammenfassung: 'Adressänderung aufgrund Umzug',
-        status: 'eingereicht'
+        status: 'eingereicht',
       })
       .select()
       .single();
 
     if (contractError) {
       console.error('Vertragsänderungs-Fehler:', JSON.stringify(contractError, null, 2));
-      throw new Error(`Vertragsänderung fehlgeschlagen: ${contractError.message || JSON.stringify(contractError)}`);
+      throw new Error(
+        `Vertragsänderung fehlgeschlagen: ${contractError.message || JSON.stringify(contractError)}`
+      );
     }
 
     console.log('✅ Vertragsänderung erstellt:', contractChange.id);
@@ -128,14 +133,16 @@ export async function testDatabaseConnection() {
         schaden_ort: 'Parkplatz Einkaufszentrum',
         schaden_beschreibung: 'Parkschaden am Fahrzeug',
         zusammenfassung: 'Beschädigung der Fahrertür durch fremdes Fahrzeug',
-        status: 'eingereicht'
+        status: 'eingereicht',
       })
       .select()
       .single();
 
     if (damageError) {
       console.error('Schadensmeldungs-Fehler:', JSON.stringify(damageError, null, 2));
-      throw new Error(`Schadensmeldung fehlgeschlagen: ${damageError.message || JSON.stringify(damageError)}`);
+      throw new Error(
+        `Schadensmeldung fehlgeschlagen: ${damageError.message || JSON.stringify(damageError)}`
+      );
     }
 
     console.log('✅ Schadensmeldung erstellt:', damageReport.id);
@@ -147,15 +154,14 @@ export async function testDatabaseConnection() {
         accidentReport,
         appointment,
         contractChange,
-        damageReport
-      }
+        damageReport,
+      },
     };
-
   } catch (error) {
     console.error('❌ Test fehlgeschlagen:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     };
   }
-} 
+}

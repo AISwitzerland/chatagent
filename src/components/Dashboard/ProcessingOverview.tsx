@@ -30,24 +30,24 @@ export default function ProcessingOverview() {
         {
           event: '*',
           schema: 'public',
-          table: 'processing_status'
+          table: 'processing_status',
         },
-        (payload) => {
+        payload => {
           if (payload.new) {
             const updatedProcess = payload.new as ProcessingEntry;
-            
+
             if (updatedProcess.status === 'processing') {
               setActiveProcesses(prev => {
                 const exists = prev.some(p => p.process_id === updatedProcess.process_id);
                 if (!exists) {
                   return [...prev, updatedProcess];
                 }
-                return prev.map(p => 
+                return prev.map(p =>
                   p.process_id === updatedProcess.process_id ? updatedProcess : p
                 );
               });
             } else {
-              setActiveProcesses(prev => 
+              setActiveProcesses(prev =>
                 prev.filter(p => p.process_id !== updatedProcess.process_id)
               );
             }
@@ -97,9 +97,7 @@ export default function ProcessingOverview() {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <h2 className="text-xl font-semibold mb-4">Aktive Verarbeitungen</h2>
-        <div className="p-4 text-red-700 bg-red-100 rounded-lg">
-          {error}
-        </div>
+        <div className="p-4 text-red-700 bg-red-100 rounded-lg">{error}</div>
       </div>
     );
   }
@@ -109,30 +107,23 @@ export default function ProcessingOverview() {
       <h2 className="text-xl font-semibold mb-4">
         Aktive Verarbeitungen
         {activeProcesses.length > 0 && (
-          <span className="ml-2 text-sm font-normal text-gray-500">
-            ({activeProcesses.length})
-          </span>
+          <span className="ml-2 text-sm font-normal text-gray-500">({activeProcesses.length})</span>
         )}
       </h2>
 
       {activeProcesses.length === 0 ? (
-        <div className="text-gray-500 text-center py-8">
-          Keine aktiven Verarbeitungen
-        </div>
+        <div className="text-gray-500 text-center py-8">Keine aktiven Verarbeitungen</div>
       ) : (
         <div className="space-y-4">
-          {activeProcesses.map((process) => (
-            <div
-              key={process.process_id}
-              className="border rounded-lg p-4"
-            >
+          {activeProcesses.map(process => (
+            <div key={process.process_id} className="border rounded-lg p-4">
               <div className="flex justify-between items-start mb-2">
                 <div className="font-medium">{process.message}</div>
                 <div className="text-sm text-gray-500">
                   {new Date(process.started_at).toLocaleTimeString()}
                 </div>
               </div>
-              
+
               <div className="relative pt-1">
                 <div className="flex mb-2 items-center justify-between">
                   <div>
@@ -154,4 +145,4 @@ export default function ProcessingOverview() {
       )}
     </div>
   );
-} 
+}

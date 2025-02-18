@@ -45,4 +45,4 @@ export interface ValidationResult {
 export interface ProcessingError extends Error {
   code: 'FILE_TYPE_ERROR' | 'PROCESSING_ERROR' | 'TIMEOUT_ERROR' | 'VALIDATION_ERROR';
   details?: any;
-} 
+}

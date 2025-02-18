@@ -9,16 +9,13 @@ class GPTVisionProcessor {
     if (!process.env.OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY ist nicht konfiguriert');
     }
-    
+
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
+      apiKey: process.env.OPENAI_API_KEY,
     });
   }
 
-  async processImage(
-    imageBase64: string,
-    fileName: string
-  ): Promise<OCRResult> {
+  async processImage(imageBase64: string, fileName: string): Promise<OCRResult> {
     const startTime = Date.now();
 
     try {
@@ -27,30 +24,30 @@ class GPTVisionProcessor {
         messages: [
           {
             role: 'system',
-            content: OCR_CONFIG.gptVision.systemPrompt
+            content: OCR_CONFIG.gptVision.systemPrompt,
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: `Analysiere dieses Dokument und extrahiere alle relevanten Informationen. Das Dokument ist: ${fileName}`
+                text: `Analysiere dieses Dokument und extrahiere alle relevanten Informationen. Das Dokument ist: ${fileName}`,
               },
               {
                 type: 'image_url',
                 image_url: {
-                  url: `data:image/jpeg;base64,${imageBase64}`
-                }
-              }
-            ]
-          }
+                  url: `data:image/jpeg;base64,${imageBase64}`,
+                },
+              },
+            ],
+          },
         ],
         max_tokens: OCR_CONFIG.gptVision.maxTokens,
-        temperature: OCR_CONFIG.gptVision.temperature
+        temperature: OCR_CONFIG.gptVision.temperature,
       });
 
       const result = response.choices[0]?.message?.content;
-      
+
       if (!result) {
         throw new Error('Keine Antwort von GPT-Vision erhalten');
       }
@@ -60,9 +57,8 @@ class GPTVisionProcessor {
         confidence: 0.95, // GPT gibt keine Konfidenz zurück, wir setzen einen hohen Standardwert
         processingTime: Date.now() - startTime,
         method: 'gpt-vision',
-        language: 'de' // Standardmäßig Deutsch, könnte später durch Spracherkennung ergänzt werden
+        language: 'de', // Standardmäßig Deutsch, könnte später durch Spracherkennung ergänzt werden
       };
-
     } catch (error: any) {
       const processingError: ProcessingError = new Error(
         `GPT-Vision Verarbeitungsfehler: ${error.message}`

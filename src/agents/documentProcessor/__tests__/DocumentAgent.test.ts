@@ -1,45 +1,54 @@
 import { DocumentAgent } from '../DocumentAgent';
-import { Document, ProcessingResult } from '../types';
+import { Document } from '../types';
 import { ProcessingError } from '../utils';
 import { OcrService } from '../ocr/ocrService';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
 // Mock OcrService
-jest.mock('../ocr/ocrService', () => {
-  return {
-    OcrService: {
-      getInstance: jest.fn().mockReturnValue({
-        processImage: jest.fn().mockImplementation(async (buffer, options) => ({
-          text: 'Schadensmeldung Nr. 123\nUnfall am 01.01.2024\nBeschädigung am Fahrzeug',
-          confidence: 0.95,
-          metadata: {
-            format: 'pdf',
-            width: 800,
-            height: 1000,
-            quality: 0.9,
-            enhancementApplied: true
-          },
-          processingTime: 1000,
-          processor: 'gpt4-vision'
-        }))
-      })
-    }
-  };
-});
+jest.mock('../ocr/ocrService', () => ({
+  OcrService: {
+    getInstance: jest.fn().mockReturnValue({
+      isAvailable: jest.fn().mockResolvedValue(true),
+      processImage: jest.fn().mockImplementation(async () => ({
+        text: 'Mocked OCR text',
+        confidence: 0.95,
+        metadata: {
+          format: 'pdf',
+          width: 800,
+          height: 600,
+          quality: 0.9,
+          enhancementApplied: true
+        },
+        processingTime: 100,
+        processor: 'test',
+        context: {
+          processId: '123e4567-e89b-12d3-a456-426614174000',
+          fileName: 'test.pdf',
+          mimeType: 'application/pdf',
+          fileSize: 1024,
+          startedAt: new Date().toISOString(),
+          metadata: {}
+        }
+      }))
+    })
+  }
+}));
 
 describe('DocumentAgent', () => {
   let agent: DocumentAgent;
   let mockDocument: Document;
-  
+
   beforeEach(() => {
     agent = DocumentAgent.getInstance();
     mockDocument = {
       file: Buffer.from('test content'),
       fileName: 'test.pdf',
       mimeType: 'application/pdf',
-      fileSize: 1024
+      fileSize: 1024,
     };
+    // Reset mock implementations before each test
+    jest.clearAllMocks();
   });
 
   // Test 1: Singleton Pattern
@@ -57,13 +66,13 @@ describe('DocumentAgent', () => {
     expect(result.message).toBe('Verarbeitung erfolgreich');
     expect(result.processingTime).toBeGreaterThan(0);
     expect(result.confidence).toBe(0.95);
-    
+
     // Überprüfe, ob result.data existiert
     expect(result.data).toBeDefined();
     if (result.data) {
       expect(result.data).toHaveProperty('extractedText');
       expect(result.data).toHaveProperty('metadata');
-      expect(result.data.metadata).toHaveProperty('processor', 'gpt4-vision');
+      expect(result.data.metadata).toHaveProperty('processor', 'test');
     }
   });
 
@@ -76,9 +85,9 @@ describe('DocumentAgent', () => {
       confidence: 0.95,
       metadata: { format: 'pdf' },
       processingTime: 1000,
-      processor: 'gpt4-vision'
+      processor: 'test',
     }));
-    
+
     let result = await agent.processDocument(mockDocument);
     expect(result.documentType).toBe('accident_report');
 
@@ -88,9 +97,9 @@ describe('DocumentAgent', () => {
       confidence: 0.95,
       metadata: { format: 'pdf' },
       processingTime: 1000,
-      processor: 'gpt4-vision'
+      processor: 'test',
     }));
-    
+
     result = await agent.processDocument(mockDocument);
     expect(result.documentType).toBe('damage_report');
 
@@ -100,9 +109,9 @@ describe('DocumentAgent', () => {
       confidence: 0.95,
       metadata: { format: 'pdf' },
       processingTime: 1000,
-      processor: 'gpt4-vision'
+      processor: 'test',
     }));
-    
+
     result = await agent.processDocument(mockDocument);
     expect(result.documentType).toBe('contract_change');
   });
@@ -111,7 +120,7 @@ describe('DocumentAgent', () => {
   test('processDocument rejects invalid mime type', async () => {
     const invalidDoc = {
       ...mockDocument,
-      mimeType: 'application/msword'
+      mimeType: 'application/msword',
     };
 
     const result = await agent.processDocument(invalidDoc);
@@ -141,7 +150,7 @@ describe('DocumentAgent', () => {
       file: Buffer.from('test content'),
       fileName: 'test.pdf',
       // mimeType fehlt absichtlich
-      fileSize: 1024
+      fileSize: 1024,
     } as Document;
 
     const result = await agent.processDocument(invalidDoc);
@@ -160,4 +169,4 @@ describe('DocumentAgent', () => {
     expect(result.processingTime).toBeGreaterThanOrEqual(0);
     expect(result.processingTime).toBeLessThanOrEqual(endTime - startTime);
   });
-}); 
+});

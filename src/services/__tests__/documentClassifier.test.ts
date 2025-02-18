@@ -1,21 +1,39 @@
-import { DocumentClassifier, ClassificationResult } from '../documentClassifier';
-import { Database } from '../../types/database';
+import 'openai/shims/node';
+import OpenAI from 'openai';
+import { isNonEmptyString, ValidationError, isErrorWithMessage } from '../types/utils';
+import { DocumentClassifier } from '../documentClassifier';
 
-type DocumentType = Database['public']['Tables']['documents']['Row']['document_type'];
+// Mock OpenAI
+jest.mock('openai', () => {
+  return jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: jest.fn().mockResolvedValue({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  type: 'accident_report',
+                  confidence: 0.9,
+                  extractedData: {
+                    dates: ['15.03.2024'],
+                    location: 'Bahnhofstrasse 10, Zürich'
+                  }
+                })
+              }
+            }
+          ]
+        })
+      }
+    }
+  }));
+});
 
 describe('DocumentClassifier', () => {
   let classifier: DocumentClassifier;
 
-  beforeAll(() => {
-    process.env.TEST_MODE = 'true';
-  });
-
   beforeEach(() => {
     classifier = DocumentClassifier.getInstance();
-  });
-
-  afterAll(() => {
-    delete process.env.TEST_MODE;
   });
 
   describe('classifyDocument', () => {
@@ -31,7 +49,7 @@ describe('DocumentClassifier', () => {
       `;
 
       const result = await classifier.classifyDocument(text);
-      
+
       expect(result.type).toBe('accident_report');
       expect(result.confidence).toBeGreaterThan(0.5);
       expect(result.extractedData).toHaveProperty('dates');
@@ -51,7 +69,7 @@ describe('DocumentClassifier', () => {
       `;
 
       const result = await classifier.classifyDocument(text);
-      
+
       expect(result.type).toBe('damage_report');
       expect(result.confidence).toBeGreaterThan(0.5);
       expect(result.extractedData).toHaveProperty('dates');
@@ -70,7 +88,7 @@ describe('DocumentClassifier', () => {
       `;
 
       const result = await classifier.classifyDocument(text);
-      
+
       expect(result.type).toBe('contract_change');
       expect(result.confidence).toBeGreaterThan(0.5);
       expect(result.extractedData).toHaveProperty('dates');
@@ -88,7 +106,7 @@ describe('DocumentClassifier', () => {
       `;
 
       const result = await classifier.classifyDocument(text);
-      
+
       expect(result.type).toBe('miscellaneous');
       expect(result.confidence).toBeLessThan(0.5);
       expect(result.extractedData).toHaveProperty('dates');
@@ -96,7 +114,7 @@ describe('DocumentClassifier', () => {
     });
 
     it('should handle empty or invalid input', async () => {
-      await expect(classifier.classifyDocument('')).rejects.toThrow('Empty or invalid input');
+      await expect(classifier.classifyDocument('')).rejects.toThrow('Leerer oder ungültiger Text');
     });
 
     it('should extract dates in correct format', async () => {
@@ -107,10 +125,10 @@ describe('DocumentClassifier', () => {
       `;
 
       const result = await classifier.classifyDocument(text);
-      
+
       expect(result.extractedData).toHaveProperty('dates');
       expect(result.extractedData.dates).toContain('01.04.2024');
       expect(result.extractedData.dates).toContain('30.04.2024');
     });
   });
-}); 
+});

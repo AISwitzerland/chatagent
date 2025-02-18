@@ -1,4 +1,8 @@
-export type DocumentType = 'accident_report' | 'damage_report' | 'contract_change' | 'miscellaneous';
+export type DocumentType =
+  | 'accident_report'
+  | 'damage_report'
+  | 'contract_change'
+  | 'miscellaneous';
 
 export interface Document {
   file: Buffer;
@@ -29,4 +33,4 @@ export interface ProcessingResult {
   data?: Record<string, any>;
   error?: Error;
   context?: ProcessingContext;
-} 
+}

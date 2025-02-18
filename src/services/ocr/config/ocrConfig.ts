@@ -12,7 +12,7 @@ export const OCR_CONFIG = {
     temperature: 0.3,
     systemPrompt: `Du bist ein Experte für Dokumentenanalyse. 
     Extrahiere wichtige Informationen aus dem Dokument und 
-    strukturiere sie in einem JSON-Format.`
+    strukturiere sie in einem JSON-Format.`,
   },
 
   // Tesseract Konfiguration (Fallback)
@@ -20,7 +20,7 @@ export const OCR_CONFIG = {
     languages: ['deu', 'eng'],
     workerPath: 'https://unpkg.com/tesseract.js@v5.0.3/dist/worker.min.js',
     corePath: 'https://unpkg.com/tesseract.js-core@v5.0.3/tesseract-core.wasm.js',
-    logger: (message: LogMessage): void => console.log(message)
+    logger: (message: LogMessage): void => console.log(message),
   },
 
   // Unterstützte Dateitypen
@@ -29,8 +29,8 @@ export const OCR_CONFIG = {
     document: [
       'application/pdf',
       'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ]
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ],
   },
 
   // Verarbeitungsoptionen
@@ -40,9 +40,9 @@ export const OCR_CONFIG = {
       maxWidth: 2000,
       maxHeight: 2000,
       quality: 90,
-      format: 'png'
+      format: 'png',
     },
-    timeout: 30000 // 30 Sekunden
+    timeout: 30000, // 30 Sekunden
   },
 
   // Dokumenttypen und deren spezifische Extraktionsregeln
@@ -51,15 +51,15 @@ export const OCR_CONFIG = {
       requiredFields: ['policy_number', 'insured_person', 'coverage_amount'],
       patterns: {
         policy_number: /Policen(?:-|\s)?(?:Nr|Nummer)\.?\s*[:.]?\s*(\w+)/i,
-        coverage_amount: /(?:Versicherungssumme|Deckung)\s*[:.]?\s*(?:CHF|EUR|USD)?\s*([\d.,]+)/i
-      }
+        coverage_amount: /(?:Versicherungssumme|Deckung)\s*[:.]?\s*(?:CHF|EUR|USD)?\s*([\d.,]+)/i,
+      },
     },
     claim_report: {
       requiredFields: ['claim_number', 'incident_date', 'damage_description'],
       patterns: {
         claim_number: /Schaden(?:-|\s)?(?:Nr|Nummer)\.?\s*[:.]?\s*(\w+)/i,
-        incident_date: /(?:Unfall|Schadens)datum\s*[:.]?\s*(\d{1,2}\.?\s*\d{1,2}\.?\s*\d{2,4})/i
-      }
-    }
-  }
-}; 
+        incident_date: /(?:Unfall|Schadens)datum\s*[:.]?\s*(\d{1,2}\.?\s*\d{1,2}\.?\s*\d{2,4})/i,
+      },
+    },
+  },
+};

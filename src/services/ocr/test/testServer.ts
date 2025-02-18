@@ -41,14 +41,14 @@ const upload = multer({
       'image/jpeg',
       'image/png',
       'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
       cb(new Error('Nicht unterstütztes Dateiformat'));
     }
-  }
+  },
 });
 
 // Startseite mit Upload-Formular
@@ -134,17 +134,14 @@ app.post('/test/upload', upload.single('file'), async (req, res) => {
       originalname: req.file.originalname,
       mimetype: req.file.mimetype,
       size: req.file.size,
-      detectedType: fileType
+      detectedType: fileType,
     });
 
     // Qualitätsprüfung
     const qualityCheck = await imagePreprocessor.checkImageQuality(fileBuffer, req.file.mimetype);
-    
+
     // Bildvorverarbeitung
-    const processedBuffer = await imagePreprocessor.preprocessImage(
-      fileBuffer,
-      req.file.mimetype
-    );
+    const processedBuffer = await imagePreprocessor.preprocessImage(fileBuffer, req.file.mimetype);
 
     // Konvertierung zu Base64
     const base64Image = await imagePreprocessor.convertToBase64(processedBuffer);
@@ -161,7 +158,7 @@ app.post('/test/upload', upload.single('file'), async (req, res) => {
       fileInfo: {
         name: req.file.originalname,
         type: fileType,
-        size: req.file.size
+        size: req.file.size,
       },
       qualityCheck,
       ocrResult: {
@@ -169,14 +166,14 @@ app.post('/test/upload', upload.single('file'), async (req, res) => {
         confidence: ocrResult.confidence,
         processingTime: ocrResult.processingTime,
         method: ocrResult.method,
-        language: ocrResult.language
-      }
+        language: ocrResult.language,
+      },
     });
   } catch (error: any) {
     console.error('Verarbeitungsfehler:', error);
     res.status(400).json({
       error: error.message || 'Fehler bei der Dokumentenverarbeitung',
-      details: error.details || {}
+      details: error.details || {},
     });
   }
 });
@@ -192,4 +189,4 @@ app.listen(port, () => {
   console.log('- GET  /         - Test Interface');
   console.log('- GET  /health   - Server Status');
   console.log('- POST /test/upload - Datei-Upload Test');
-}); 
+});

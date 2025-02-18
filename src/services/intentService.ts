@@ -6,87 +6,114 @@ import { intentPatterns } from '../data/intentPatterns';
 const INTENT_PATTERNS = {
   INFORMATION: {
     keywords: [
-      'information', 'info', 'details', 'erklären', 'wie funktioniert', 
-      'was ist', 'bedeutet', 'verstehen', 'wissen'
+      'information',
+      'info',
+      'details',
+      'erklären',
+      'wie funktioniert',
+      'was ist',
+      'bedeutet',
+      'verstehen',
+      'wissen',
     ],
     insuranceTypes: [
-      'krankenversicherung', 'hausrat', 'haftpflicht', 'auto', 'leben',
-      'unfall', 'rechtsschutz'
-    ]
+      'krankenversicherung',
+      'hausrat',
+      'haftpflicht',
+      'auto',
+      'leben',
+      'unfall',
+      'rechtsschutz',
+    ],
   },
   PRICE: {
     keywords: [
-      'preis', 'kosten', 'prämie', 'offerte', 'angebot', 'rabatt', 
-      'sparen', 'günstiger', 'teuer', 'bezahlen'
+      'preis',
+      'kosten',
+      'prämie',
+      'offerte',
+      'angebot',
+      'rabatt',
+      'sparen',
+      'günstiger',
+      'teuer',
+      'bezahlen',
     ],
-    amounts: [
-      'chf', 'franken', 'fr.', '%', 'prozent'
-    ]
+    amounts: ['chf', 'franken', 'fr.', '%', 'prozent'],
   },
   CLAIM: {
     keywords: [
-      'schaden', 'unfall', 'schadenfall', 'melden', 'beschädigt',
-      'gestohlen', 'verloren', 'kaputt'
+      'schaden',
+      'unfall',
+      'schadenfall',
+      'melden',
+      'beschädigt',
+      'gestohlen',
+      'verloren',
+      'kaputt',
     ],
-    urgencyIndicators: [
-      'sofort', 'dringend', 'notfall', 'schnell', 'eilig'
-    ]
+    urgencyIndicators: ['sofort', 'dringend', 'notfall', 'schnell', 'eilig'],
   },
   COVERAGE: {
     keywords: [
-      'deckung', 'versichert', 'abgedeckt', 'geltungsbereich', 'leistung',
-      'eingeschlossen', 'ausgeschlossen'
-    ]
+      'deckung',
+      'versichert',
+      'abgedeckt',
+      'geltungsbereich',
+      'leistung',
+      'eingeschlossen',
+      'ausgeschlossen',
+    ],
   },
   DOCUMENT: {
     keywords: [
-      'dokument', 'police', 'vertrag', 'bescheinigung', 'nachweis',
-      'formular', 'unterlagen'
+      'dokument',
+      'police',
+      'vertrag',
+      'bescheinigung',
+      'nachweis',
+      'formular',
+      'unterlagen',
     ],
-    documentTypes: [
-      'versicherungsschein', 'rechnung', 'quittung', 'antrag', 'kündigung'
-    ]
+    documentTypes: ['versicherungsschein', 'rechnung', 'quittung', 'antrag', 'kündigung'],
   },
   COMPLAINT: {
-    keywords: [
-      'beschwerde', 'unzufrieden', 'problem', 'ärger', 'fehler',
-      'falsch', 'reklamation'
-    ],
-    sentimentIndicators: [
-      'enttäuscht', 'verärgert', 'wütend', 'nicht okay', 'schlecht'
-    ]
+    keywords: ['beschwerde', 'unzufrieden', 'problem', 'ärger', 'fehler', 'falsch', 'reklamation'],
+    sentimentIndicators: ['enttäuscht', 'verärgert', 'wütend', 'nicht okay', 'schlecht'],
   },
   CHANGE: {
     keywords: [
-      'ändern', 'anpassen', 'wechseln', 'aktualisieren', 'umziehen',
-      'umzug', 'adressänderung'
+      'ändern',
+      'anpassen',
+      'wechseln',
+      'aktualisieren',
+      'umziehen',
+      'umzug',
+      'adressänderung',
     ],
-    changeTypes: [
-      'adresse', 'franchise', 'deckung', 'zahlungsweise', 'bank'
-    ]
+    changeTypes: ['adresse', 'franchise', 'deckung', 'zahlungsweise', 'bank'],
   },
   CANCELLATION: {
     keywords: [
-      'kündigen', 'stornieren', 'beenden', 'auflösen', 'widerruf',
-      'rücktritt', 'aussteigen'
-    ]
+      'kündigen',
+      'stornieren',
+      'beenden',
+      'auflösen',
+      'widerruf',
+      'rücktritt',
+      'aussteigen',
+    ],
   },
   EMERGENCY: {
-    keywords: [
-      'notfall', 'sofort', 'dringend', 'hilfe', 'gefahr',
-      'lebensbedrohlich', 'akut'
-    ]
+    keywords: ['notfall', 'sofort', 'dringend', 'hilfe', 'gefahr', 'lebensbedrohlich', 'akut'],
   },
   TECHNICAL: {
-    keywords: [
-      'login', 'anmelden', 'passwort', 'zugang', 'app', 'website',
-      'portal', 'online'
-    ]
-  }
+    keywords: ['login', 'anmelden', 'passwort', 'zugang', 'app', 'website', 'portal', 'online'],
+  },
 };
 
 export async function detectIntents(
-  message: string, 
+  message: string,
   language: SupportedLanguages = 'de'
 ): Promise<Intent[]> {
   const normalizedMessage = message.toLowerCase();
@@ -99,13 +126,13 @@ export async function detectIntents(
     if (confidence > 0.3) {
       const entities = extractEntities(normalizedMessage, categoryPatterns, language);
       const urgency = determineUrgency(normalizedMessage, category as IntentCategory, language);
-      
+
       intents.push({
         category: category as IntentCategory,
         confidence,
         entities,
         urgency,
-        subCategory: determineSubCategory(category as IntentCategory, entities)
+        subCategory: determineSubCategory(category as IntentCategory, entities),
       });
     }
   }
@@ -113,7 +140,11 @@ export async function detectIntents(
   return intents.sort((a, b) => b.confidence - a.confidence);
 }
 
-function calculateIntentConfidence(message: string, patterns: any, language: SupportedLanguages): number {
+function calculateIntentConfidence(
+  message: string,
+  patterns: any,
+  language: SupportedLanguages
+): number {
   let matchCount = 0;
   let totalPatterns = 0;
 
@@ -135,7 +166,11 @@ function calculateIntentConfidence(message: string, patterns: any, language: Sup
   return matchCount / totalPatterns;
 }
 
-function extractEntities(message: string, patterns: any, language: SupportedLanguages): IntentEntity[] {
+function extractEntities(
+  message: string,
+  patterns: any,
+  language: SupportedLanguages
+): IntentEntity[] {
   const entities: IntentEntity[] = [];
 
   // Versicherungstypen erkennen
@@ -145,7 +180,7 @@ function extractEntities(message: string, patterns: any, language: SupportedLang
         entities.push({
           type: 'insurance_type',
           value: type,
-          confidence: 0.9
+          confidence: 0.9,
         });
       }
     }
@@ -158,7 +193,7 @@ function extractEntities(message: string, patterns: any, language: SupportedLang
         entities.push({
           type: 'document_type',
           value: type,
-          confidence: 0.9
+          confidence: 0.9,
         });
       }
     }
@@ -172,7 +207,7 @@ function extractEntities(message: string, patterns: any, language: SupportedLang
       entities.push({
         type: 'amount',
         value: amount,
-        confidence: 0.95
+        confidence: 0.95,
       });
     });
   }
@@ -185,7 +220,7 @@ function extractEntities(message: string, patterns: any, language: SupportedLang
       entities.push({
         type: 'date',
         value: date,
-        confidence: 0.95
+        confidence: 0.95,
       });
     });
   }
@@ -194,25 +229,26 @@ function extractEntities(message: string, patterns: any, language: SupportedLang
 }
 
 function determineUrgency(
-  message: string, 
-  category: IntentCategory, 
+  message: string,
+  category: IntentCategory,
   language: SupportedLanguages
 ): 'low' | 'medium' | 'high' {
   const highUrgencyKeywords = URGENCY_INDICATORS.high[language];
   const mediumUrgencyKeywords = URGENCY_INDICATORS.medium[language];
 
-  if (category === 'EMERGENCY' || 
-      highUrgencyKeywords.some(keyword => message.includes(keyword))) {
+  if (category === 'EMERGENCY' || highUrgencyKeywords.some(keyword => message.includes(keyword))) {
     return 'high';
   }
-  if (category === 'CLAIM' || 
-      mediumUrgencyKeywords.some(keyword => message.includes(keyword))) {
+  if (category === 'CLAIM' || mediumUrgencyKeywords.some(keyword => message.includes(keyword))) {
     return 'medium';
   }
   return 'low';
 }
 
-function determineSubCategory(category: IntentCategory, entities: IntentEntity[]): string | undefined {
+function determineSubCategory(
+  category: IntentCategory,
+  entities: IntentEntity[]
+): string | undefined {
   const insuranceType = entities.find(e => e.type === 'insurance_type')?.value;
   const documentType = entities.find(e => e.type === 'document_type')?.value;
 
@@ -250,4 +286,4 @@ export async function processIntent(message: string): Promise<string | null> {
 export function getResponseForIntent(intent: string, language: string = 'de'): string {
   // TODO: Implementiere Intent-basierte Antworten
   return 'Ich verstehe Ihr Anliegen. Wie kann ich Ihnen weiterhelfen?';
-} 
+}

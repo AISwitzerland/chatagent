@@ -15,8 +15,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       id: '1',
       content: 'Willkommen bei Swiss Insurance! Wie kann ich Ihnen helfen?',
       role: 'assistant',
-      created_at: new Date().toISOString()
-    }
+      created_at: new Date().toISOString(),
+    },
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
@@ -24,29 +24,38 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
   // Überprüfe Bot-Antworten auf Upload-Trigger
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
-    if (lastMessage?.role === 'assistant' && 
-        lastMessage.content.includes('Ich aktiviere jetzt den Upload-Bereich')) {
+    if (
+      lastMessage?.role === 'assistant' &&
+      lastMessage.content.includes('Ich aktiviere jetzt den Upload-Bereich')
+    ) {
       setShowUpload(true);
     }
   }, [messages]);
 
   const handleUploadComplete = () => {
     setShowUpload(false);
-    setMessages(prev => [...prev, {
-      id: Date.now().toString(),
-      content: 'Dokument erfolgreich hochgeladen! Die Verarbeitung wurde gestartet. Kann ich Ihnen noch bei etwas anderem helfen?',
-      role: 'assistant',
-      created_at: new Date().toISOString()
-    }]);
+    setMessages(prev => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        content:
+          'Dokument erfolgreich hochgeladen! Die Verarbeitung wurde gestartet. Kann ich Ihnen noch bei etwas anderem helfen?',
+        role: 'assistant',
+        created_at: new Date().toISOString(),
+      },
+    ]);
   };
 
   const handleUploadError = (error: string) => {
-    setMessages(prev => [...prev, {
-      id: Date.now().toString(),
-      content: `Beim Upload ist ein Fehler aufgetreten: ${error}. Bitte versuchen Sie es erneut oder kontaktieren Sie unseren Support.`,
-      role: 'assistant',
-      created_at: new Date().toISOString()
-    }]);
+    setMessages(prev => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        content: `Beim Upload ist ein Fehler aufgetreten: ${error}. Bitte versuchen Sie es erneut oder kontaktieren Sie unseren Support.`,
+        role: 'assistant',
+        created_at: new Date().toISOString(),
+      },
+    ]);
   };
 
   const handleSendMessage = async (message: string) => {
@@ -56,7 +65,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       id: Date.now().toString(),
       content: message,
       role: 'user',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -70,28 +79,34 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
         },
         body: JSON.stringify({
           messages: [...messages, userMessage],
-          language: 'de'
+          language: 'de',
         }),
       });
 
       if (!response.ok) throw new Error('Fehler bei der Kommunikation');
 
       const data = await response.json();
-      
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        content: data.content,
-        role: 'assistant',
-        created_at: new Date().toISOString()
-      }]);
+
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          content: data.content,
+          role: 'assistant',
+          created_at: new Date().toISOString(),
+        },
+      ]);
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        content: 'Entschuldigung, es gab einen Fehler. Bitte versuchen Sie es später erneut.',
-        role: 'assistant',
-        created_at: new Date().toISOString()
-      }]);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          content: 'Entschuldigung, es gab einen Fehler. Bitte versuchen Sie es später erneut.',
+          role: 'assistant',
+          created_at: new Date().toISOString(),
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -105,16 +120,8 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
           <h3 className="text-lg font-semibold">Swiss Insurance Chat</h3>
           <p className="text-sm text-gray-500">Wir sind für Sie da</p>
         </div>
-        <button
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -127,18 +134,14 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
+        {messages.map(message => (
           <div
             key={message.id}
-            className={`flex ${
-              message.role === 'user' ? 'justify-end' : 'justify-start'
-            }`}
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
               className={`max-w-[80%] rounded-lg p-3 ${
-                message.role === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100'
+                message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100'
               }`}
             >
               {message.content}
@@ -164,7 +167,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
               userData={{
                 name: 'Test User',
                 email: 'test@example.com',
-                phone: ''
+                phone: '',
               }}
               onUploadComplete={handleUploadComplete}
               onUploadError={handleUploadError}
@@ -183,4 +186,4 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
       </div>
     </div>
   );
-} 
+}

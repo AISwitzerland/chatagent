@@ -16,10 +16,10 @@ export async function generateChatResponse(
       body: JSON.stringify({
         messages: messages.map(msg => ({
           role: msg.role,
-          content: msg.content
+          content: msg.content,
         })),
-        language
-      })
+        language,
+      }),
     });
 
     const data = await response.json();
@@ -42,7 +42,7 @@ export async function analyzeSentiment(text: string): Promise<'positive' | 'neut
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text }),
     });
 
     if (!response.ok) {

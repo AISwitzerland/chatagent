@@ -43,11 +43,11 @@ export default function FAQSection() {
           placeholder="FAQ durchsuchen..."
           className="w-full p-2 border rounded-lg"
           value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={e => handleSearch(e.target.value)}
         />
         <select
           value={language}
-          onChange={(e) => setLanguage(e.target.value as SupportedLanguages)}
+          onChange={e => setLanguage(e.target.value as SupportedLanguages)}
           className="mt-2 p-2 border rounded-lg"
         >
           {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => (
@@ -62,7 +62,7 @@ export default function FAQSection() {
         <div className="text-center">Laden...</div>
       ) : (
         <div className="space-y-4">
-          {faqs.map((faq) => (
+          {faqs.map(faq => (
             <div key={faq.id} className="border rounded-lg p-4">
               <h3 className="font-bold text-lg mb-2">{faq.question}</h3>
               <p className="text-gray-700">{faq.answer}</p>
@@ -73,4 +73,4 @@ export default function FAQSection() {
       )}
     </div>
   );
-} 
+}

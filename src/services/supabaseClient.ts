@@ -1,12 +1,12 @@
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/types/database'
+import { createClient } from '@supabase/supabase-js';
+import { Database } from '@/types/database';
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_URL')
+  throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_URL');
 }
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY');
 }
 
 export const supabase = createClient<Database>(
@@ -15,22 +15,25 @@ export const supabase = createClient<Database>(
   {
     auth: {
       persistSession: true,
-      autoRefreshToken: true
+      autoRefreshToken: true,
     },
     db: {
-      schema: 'public'
-    }
+      schema: 'public',
+    },
   }
-)
+);
 
 // Automatische Anmeldung
 const autoLogin = async () => {
   console.log('Starte automatische Anmeldung...');
-  
+
   try {
-    const { data: { session }, error } = await supabase.auth.signInWithPassword({
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.signInWithPassword({
       email: 'wehrlinatasha@gmail.com',
-      password: 'test123'
+      password: 'test123',
     });
 
     if (error) {
@@ -41,7 +44,7 @@ const autoLogin = async () => {
       console.log('Session Details:', {
         accessToken: session?.access_token ? 'Vorhanden' : 'Fehlt',
         userId: session?.user?.id,
-        expiresAt: session?.expires_at
+        expiresAt: session?.expires_at,
       });
     }
   } catch (e) {
@@ -78,12 +81,10 @@ export async function uploadDocumentToStorage(
   path: string
 ): Promise<{ path: string } | null> {
   try {
-    const { data, error } = await supabase.storage
-      .from('documents')
-      .upload(path, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+    const { data, error } = await supabase.storage.from('documents').upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
 
     if (error) throw error;
     return data;
@@ -109,8 +110,8 @@ export async function createDocumentEntry(
           file_path: filePath,
           file_type: fileType,
           status: 'pending',
-          metadata
-        }
+          metadata,
+        },
       ])
       .select()
       .single();
@@ -121,4 +122,4 @@ export async function createDocumentEntry(
     console.error('Error creating document entry:', error);
     return null;
   }
-} 
+}

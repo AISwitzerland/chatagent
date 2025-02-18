@@ -6,12 +6,7 @@ export type ProcessingStatus =
   | 'completed'
   | 'failed';
 
-export type ProcessingStep =
-  | 'upload'
-  | 'ocr'
-  | 'classification'
-  | 'storage'
-  | 'validation';
+export type ProcessingStep = 'upload' | 'ocr' | 'classification' | 'storage' | 'validation';
 
 export interface ProcessingProgress {
   processId: string;
@@ -45,5 +40,5 @@ export const DEFAULT_PROCESSING_OPTIONS: ProcessingOptions = {
   maxRetries: 2,
   retryDelay: 2000,
   timeout: 120000,
-  priority: 'normal'
-}; 
+  priority: 'normal',
+};

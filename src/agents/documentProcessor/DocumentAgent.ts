@@ -22,14 +22,14 @@ export class DocumentAgent {
   public async processDocument(document: Document, processId?: string): Promise<ProcessingResult> {
     const startTime = Date.now();
     const context = this.createProcessingContext(document, processId);
-    
+
     try {
       // 1. Log document receipt
       logStep('Dokument empfangen', {
         fileName: document.fileName,
         mimeType: document.mimeType,
         fileSize: document.fileSize,
-        processId: context.processId
+        processId: context.processId,
       });
 
       // 2. Validate document
@@ -38,7 +38,7 @@ export class DocumentAgent {
       // 3. Perform OCR
       logStep('Starte OCR-Verarbeitung');
       const ocrResult = await this.performOcr(document, context);
-      
+
       // 4. Classify document based on OCR results
       logStep('Klassifiziere Dokument');
       const documentType = await this.classifyDocument(ocrResult);
@@ -58,18 +58,18 @@ export class DocumentAgent {
           extractedText: ocrResult.text,
           metadata: {
             ...ocrResult.metadata,
-            processor: ocrResult.processor
-          }
+            processor: ocrResult.processor,
+          },
         },
-        context
+        context,
       };
 
       logStep('Verarbeitung abgeschlossen', result);
       return result;
-
     } catch (error) {
-      const processingError = error instanceof ProcessingError 
-          ? error 
+      const processingError =
+        error instanceof ProcessingError
+          ? error
           : new ProcessingError('Unerwarteter Fehler', 'processDocument', error);
 
       const errorResult: ProcessingResult = {
@@ -78,14 +78,14 @@ export class DocumentAgent {
         processingTime: Date.now() - startTime,
         confidence: 0,
         error: processingError,
-        context
+        context,
       };
 
       logStep('Fehler bei der Verarbeitung', {
         error: processingError.message,
         step: processingError.step,
         details: processingError.details,
-        processId: context.processId
+        processId: context.processId,
       });
 
       return errorResult;
@@ -99,25 +99,22 @@ export class DocumentAgent {
       mimeType: document.mimeType,
       fileSize: document.fileSize,
       startedAt: new Date().toISOString(),
-      metadata: {}
+      metadata: {},
     };
   }
 
   private async validateDocument(document: Document): Promise<void> {
     if (!document.fileName || !document.mimeType || !document.fileSize) {
-      throw new ProcessingError(
-        'Ungültige Dokumentdaten',
-        'validation',
-        { fileName: document.fileName, mimeType: document.mimeType }
-      );
+      throw new ProcessingError('Ungültige Dokumentdaten', 'validation', {
+        fileName: document.fileName,
+        mimeType: document.mimeType,
+      });
     }
 
     if (!this.SUPPORTED_MIME_TYPES.includes(document.mimeType)) {
-      throw new ProcessingError(
-        'Nicht unterstütztes Dateiformat',
-        'validation',
-        { mimeType: document.mimeType }
-      );
+      throw new ProcessingError('Nicht unterstütztes Dateiformat', 'validation', {
+        mimeType: document.mimeType,
+      });
     }
   }
 
@@ -130,23 +127,19 @@ export class DocumentAgent {
           fileName: context.fileName,
           mimeType: context.mimeType,
           fileSize: context.fileSize,
-          metadata: context.metadata
-        }
+          metadata: context.metadata,
+        },
       };
 
       return await this.ocrService.processImage(document.file, options);
     } catch (error) {
-      throw new ProcessingError(
-        'OCR-Verarbeitung fehlgeschlagen',
-        'ocr',
-        error
-      );
+      throw new ProcessingError('OCR-Verarbeitung fehlgeschlagen', 'ocr', error);
     }
   }
 
   private async classifyDocument(ocrResult: OcrResult): Promise<DocumentType> {
     const text = ocrResult.text.toLowerCase();
-    
+
     // Einfache regelbasierte Klassifizierung
     if (text.includes('unfall') || text.includes('kollision') || text.includes('crash')) {
       return 'accident_report';
@@ -157,7 +150,7 @@ export class DocumentAgent {
     if (text.includes('vertrag') || text.includes('änderung') || text.includes('police')) {
       return 'contract_change';
     }
-    
+
     return 'miscellaneous';
   }
-} 
+}

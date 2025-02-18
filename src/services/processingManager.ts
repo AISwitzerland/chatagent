@@ -1,4 +1,11 @@
-import { ProcessingStatus, ProcessingStep, ProcessingProgress, ProcessingError, ProcessingOptions, DEFAULT_PROCESSING_OPTIONS } from '../types/processing';
+import {
+  ProcessingStatus,
+  ProcessingStep,
+  ProcessingProgress,
+  ProcessingError,
+  ProcessingOptions,
+  DEFAULT_PROCESSING_OPTIONS,
+} from '../types/processing';
 import { supabase } from './supabaseClient';
 import { DocumentAgent } from '../agents/documentProcessor/DocumentAgent';
 import { Document } from '../agents/documentProcessor/types';
@@ -25,18 +32,18 @@ export class ProcessingManager {
     options: ProcessingOptions = DEFAULT_PROCESSING_OPTIONS
   ): Promise<string> {
     const processId = this.generateProcessId();
-    
+
     const progress: ProcessingProgress = {
       processId,
       status: 'queued',
       currentStep: 'upload',
       progress: 0,
       message: 'Dokument wurde in die Warteschlange aufgenommen',
-      startedAt: new Date().toISOString()
+      startedAt: new Date().toISOString(),
     };
 
     this.processingQueue.set(processId, progress);
-    
+
     // Starte die Verarbeitung asynchron
     void this.startProcessing(processId, document, options);
 
@@ -62,7 +69,7 @@ export class ProcessingManager {
             status: 'processing_ocr',
             currentStep: 'ocr',
             progress: 25,
-            message: 'OCR-Verarbeitung läuft'
+            message: 'OCR-Verarbeitung läuft',
           });
 
           const result = await this.documentAgent.processDocument(document);
@@ -76,7 +83,7 @@ export class ProcessingManager {
             status: 'processing_classification',
             currentStep: 'classification',
             progress: 50,
-            message: 'Dokument wird klassifiziert'
+            message: 'Dokument wird klassifiziert',
           });
 
           // Speicherung
@@ -84,7 +91,7 @@ export class ProcessingManager {
             status: 'processing_storage',
             currentStep: 'storage',
             progress: 75,
-            message: 'Dokument wird gespeichert'
+            message: 'Dokument wird gespeichert',
           });
 
           // Erfolgreich abgeschlossen
@@ -93,20 +100,19 @@ export class ProcessingManager {
             currentStep: 'storage',
             progress: 100,
             message: 'Verarbeitung erfolgreich abgeschlossen',
-            completedAt: new Date().toISOString()
+            completedAt: new Date().toISOString(),
           });
 
           return;
-
         } catch (error: any) {
           retryCount++;
-          
+
           if (retryCount > (options.maxRetries || DEFAULT_PROCESSING_OPTIONS.maxRetries!)) {
             throw error;
           }
 
           // Warte vor dem nächsten Versuch
-          await new Promise(resolve => 
+          await new Promise(resolve =>
             setTimeout(resolve, options.retryDelay || DEFAULT_PROCESSING_OPTIONS.retryDelay)
           );
 
@@ -118,8 +124,8 @@ export class ProcessingManager {
               step: this.processingQueue.get(processId)?.currentStep || 'upload',
               retryCount,
               timestamp: new Date().toISOString(),
-              details: error
-            }
+              details: error,
+            },
           });
         }
       }
@@ -135,8 +141,8 @@ export class ProcessingManager {
           step: this.processingQueue.get(processId)?.currentStep || 'upload',
           retryCount,
           timestamp: errorTimestamp,
-          details: error
-        }
+          details: error,
+        },
       });
     }
   }
@@ -146,9 +152,9 @@ export class ProcessingManager {
     if (currentProgress) {
       this.processingQueue.set(processId, {
         ...currentProgress,
-        ...update
+        ...update,
       });
-      
+
       // Hier könnte eine Event-Emission für UI-Updates erfolgen
       this.emitProgressUpdate(processId);
     }
@@ -159,27 +165,23 @@ export class ProcessingManager {
     if (progress) {
       try {
         // Speichere den Fortschritt in Supabase
-        await supabase
-          .from('processing_status')
-          .upsert({
-            process_id: processId,
-            status: progress.status,
-            progress: progress.progress,
-            message: progress.message,
-            updated_at: new Date().toISOString()
-          });
+        await supabase.from('processing_status').upsert({
+          process_id: processId,
+          status: progress.status,
+          progress: progress.progress,
+          message: progress.message,
+          updated_at: new Date().toISOString(),
+        });
 
         // Optional: Websocket-Event für Echtzeit-Updates
-        await supabase
-          .channel('processing_updates')
-          .send({
-            type: 'broadcast',
-            event: 'progress_update',
-            payload: {
-              processId,
-              progress
-            }
-          });
+        await supabase.channel('processing_updates').send({
+          type: 'broadcast',
+          event: 'progress_update',
+          payload: {
+            processId,
+            progress,
+          },
+        });
       } catch (error) {
         console.error('Fehler beim Aktualisieren des Verarbeitungsstatus:', error);
       }
@@ -189,4 +191,4 @@ export class ProcessingManager {
   private generateProcessId(): string {
     return `proc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
-} 
+}

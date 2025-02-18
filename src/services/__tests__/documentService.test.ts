@@ -1,3 +1,20 @@
+// Mock supabaseClient
+jest.mock('../supabaseClient', () => ({
+  supabase: {
+    from: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+    insert: jest.fn().mockReturnThis(),
+    update: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    single: jest.fn().mockResolvedValue({ data: null, error: null }),
+    storage: {
+      from: jest.fn().mockReturnThis(),
+      upload: jest.fn().mockResolvedValue({ data: { path: 'test.pdf' }, error: null }),
+      remove: jest.fn().mockResolvedValue({ data: null, error: null })
+    }
+  }
+}));
+
 import { DocumentService } from '../documentService';
 import { supabase } from '../supabaseClient';
 
@@ -17,11 +34,11 @@ describe('DocumentService', () => {
   it('should upload a document successfully', async () => {
     // Mock File
     const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-    
+
     // Mock user data
     const userData = {
       name: 'Test User',
-      email: 'test@example.com'
+      email: 'test@example.com',
     };
 
     const result = await documentService.uploadDocument(file, userData);
@@ -34,7 +51,7 @@ describe('DocumentService', () => {
     if (result.documentId) {
       const document = await documentService.getDocument(result.documentId);
       expect(document).toBeDefined();
-      expect(document?.file_name).toBe('test.pdf');
+      expect(document?.filename).toBe('test.pdf');
       expect(document?.status).toBe('pending');
     }
   });
@@ -42,10 +59,10 @@ describe('DocumentService', () => {
   it('should handle upload errors gracefully', async () => {
     // Mock File mit ungültigem Typ
     const file = new File(['test content'], 'test.exe', { type: 'application/x-msdownload' });
-    
+
     const userData = {
       name: 'Test User',
-      email: 'test@example.com'
+      email: 'test@example.com',
     };
 
     const result = await documentService.uploadDocument(file, userData);
@@ -68,10 +85,7 @@ describe('DocumentService', () => {
       }
 
       // Lösche Datenbankeinträge
-      await supabase
-        .from('documents')
-        .delete()
-        .eq('file_name', 'test.pdf');
+      await supabase.from('documents').delete().eq('file_name', 'test.pdf');
     }
   });
-}); 
+});

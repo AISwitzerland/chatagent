@@ -11,17 +11,19 @@ export interface ApiError {
 // Image Processing Response Schema
 export const ImageProcessingResultSchema = z.object({
   processedImage: z.string(),
-  metadata: z.object({
-    width: z.number(),
-    height: z.number(),
-    format: z.string(),
-    quality: z.number(),
-    processingTime: z.number(),
-    originalSize: z.number(),
-    processedSize: z.number(),
-    enhancementApplied: z.boolean().optional(),
-    ocrConfidence: z.number().optional(),
-  }).partial(),
+  metadata: z
+    .object({
+      width: z.number(),
+      height: z.number(),
+      format: z.string(),
+      quality: z.number(),
+      processingTime: z.number(),
+      originalSize: z.number(),
+      processedSize: z.number(),
+      enhancementApplied: z.boolean().optional(),
+      ocrConfidence: z.number().optional(),
+    })
+    .partial(),
 });
 
 export type ImageProcessingResult = z.infer<typeof ImageProcessingResultSchema>;
@@ -40,12 +42,14 @@ export type DocumentUploadResult = z.infer<typeof DocumentUploadResultSchema>;
 export const OpenAIResponseSchema = z.object({
   content: z.string(),
   role: z.literal('assistant'),
-  metadata: z.object({
-    model: z.string(),
-    promptTokens: z.number(),
-    completionTokens: z.number(),
-    totalTokens: z.number(),
-  }).optional(),
+  metadata: z
+    .object({
+      model: z.string(),
+      promptTokens: z.number(),
+      completionTokens: z.number(),
+      totalTokens: z.number(),
+    })
+    .optional(),
 });
 
 export type OpenAIResponse = z.infer<typeof OpenAIResponseSchema>;
@@ -86,4 +90,4 @@ export function isOpenAIResponse(data: unknown): data is OpenAIResponse {
   } catch {
     return false;
   }
-} 
+}

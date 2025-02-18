@@ -1,39 +1,36 @@
-import { supabase } from './supabaseClient'
-import { Message } from '@/types'
-import { detectIntents } from './intentService'
-import { analyzeSentiment, generateChatResponse } from './openaiService'
-import { processIntent } from './intentService'
-import { detectLanguage } from './languageService'
+import { supabase } from './supabaseClient';
+import { Message } from '@/types';
+import { detectIntents } from './intentService';
+import { analyzeSentiment, generateChatResponse } from './openaiService';
+import { processIntent } from './intentService';
+import { detectLanguage } from './languageService';
 
 export async function createChat(userId: string, language: string = 'de') {
   const { data, error } = await supabase
     .from('chats')
     .insert({
       user_id: userId,
-      language
+      language,
     })
     .select()
-    .single()
+    .single();
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 
 export async function sendMessage(content: string, attachments?: string[]) {
   try {
     // 1. Sprache erkennen
-    const language = await detectLanguage(content)
+    const language = await detectLanguage(content);
 
     // 2. Intent & Sentiment analysieren
-    let intent = null
-    let sentiment = 'neutral'
+    let intent = null;
+    let sentiment = 'neutral';
     try {
-      [intent, sentiment] = await Promise.all([
-        processIntent(content),
-        analyzeSentiment(content)
-      ])
+      [intent, sentiment] = await Promise.all([processIntent(content), analyzeSentiment(content)]);
     } catch (error) {
-      console.error('Analysis Error:', error)
+      console.error('Analysis Error:', error);
       // Weitermachen mit Standardwerten
     }
 
@@ -46,18 +43,18 @@ export async function sendMessage(content: string, attachments?: string[]) {
         attachments,
         intent,
         sentiment,
-        language
+        language,
       })
       .select()
-      .single()
+      .single();
 
     if (userError) {
-      console.error('Supabase Error:', userError)
-      throw new Error('Failed to save message')
+      console.error('Supabase Error:', userError);
+      throw new Error('Failed to save message');
     }
 
     // 4. OpenAI Antwort generieren
-    const aiResponse = await generateChatResponse([userMessage], language)
+    const aiResponse = await generateChatResponse([userMessage], language);
 
     // 5. AI Antwort speichern
     const { data: assistantMessage, error: assistantError } = await supabase
@@ -65,20 +62,20 @@ export async function sendMessage(content: string, attachments?: string[]) {
       .insert({
         content: aiResponse,
         role: 'assistant',
-        language
+        language,
       })
       .select()
-      .single()
+      .single();
 
-    if (assistantError) throw assistantError
+    if (assistantError) throw assistantError;
 
     return {
       userMessage,
-      assistantMessage
-    }
+      assistantMessage,
+    };
   } catch (error) {
-    console.error('Message Error:', error)
-    throw error
+    console.error('Message Error:', error);
+    throw error;
   }
 }
 
@@ -87,8 +84,8 @@ export async function getChatHistory(chatId: string) {
     .from('messages')
     .select('*')
     .eq('chat_id', chatId)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: true });
 
-  if (error) throw error
-  return data
-} 
+  if (error) throw error;
+  return data;
+}

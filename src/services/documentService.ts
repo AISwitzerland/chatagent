@@ -1,8 +1,5 @@
 import { supabase } from './supabaseClient';
-import { ProcessingError } from '../agents/documentProcessor/utils';
 import { DocumentStatus, Document } from '../types/index';
-import { DocumentClassifier } from './documentClassifier';
-import { OcrService } from '../agents/documentProcessor/ocr/ocrService';
 import { ProcessingManager } from './processingManager';
 import { isErrorWithMessage, ValidationError, isDefined } from '../types/utils';
 import { ALLOWED_FILE_TYPES, MAX_FILE_SIZE } from '../types/constants';
@@ -37,13 +34,9 @@ export interface DocumentMetadata {
 
 export class DocumentService {
   private static instance: DocumentService;
-  private classifier: DocumentClassifier;
-  private ocrService: OcrService;
   private processingManager: ProcessingManager;
 
   private constructor() {
-    this.classifier = DocumentClassifier.getInstance();
-    this.ocrService = OcrService.getInstance();
     this.processingManager = ProcessingManager.getInstance();
   }
 
@@ -61,20 +54,12 @@ export class DocumentService {
     try {
       // Validiere Dateityp
       if (!ALLOWED_FILE_TYPES.all.includes(file.type)) {
-        throw new ValidationError(
-          'Nicht unterstützter Dateityp',
-          'file',
-          'INVALID_FILE_TYPE'
-        );
+        throw new ValidationError('Nicht unterstützter Dateityp', 'file', 'INVALID_FILE_TYPE');
       }
 
       // Validiere Dateigröße
       if (file.size > MAX_FILE_SIZE) {
-        throw new ValidationError(
-          'Datei ist zu groß',
-          'file',
-          'FILE_TOO_LARGE'
-        );
+        throw new ValidationError('Datei ist zu groß', 'file', 'FILE_TOO_LARGE');
       }
 
       // Erstelle Metadata
@@ -83,7 +68,7 @@ export class DocumentService {
         size: file.size,
         mimeType: file.type,
         uploadedBy: userData,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
       };
 
       // Erstelle ein Document-Objekt für die Verarbeitung
@@ -92,7 +77,7 @@ export class DocumentService {
         fileName: file.name,
         mimeType: file.type,
         fileSize: file.size,
-        metadata
+        metadata,
       };
 
       // Starte die asynchrone Verarbeitung
@@ -100,9 +85,8 @@ export class DocumentService {
 
       return {
         success: true,
-        processId
+        processId,
       };
-
     } catch (error) {
       if (error instanceof ValidationError) {
         return {
@@ -110,8 +94,8 @@ export class DocumentService {
           error: {
             code: error.code,
             message: error.message,
-            details: { field: error.field }
-          }
+            details: { field: error.field },
+          },
         };
       }
 
@@ -121,8 +105,8 @@ export class DocumentService {
           success: false,
           error: {
             code: 'UPLOAD_FAILED',
-            message: error.message
-          }
+            message: error.message,
+          },
         };
       }
 
@@ -130,8 +114,8 @@ export class DocumentService {
         success: false,
         error: {
           code: 'UNKNOWN_ERROR',
-          message: 'Ein unbekannter Fehler ist aufgetreten'
-        }
+          message: 'Ein unbekannter Fehler ist aufgetreten',
+        },
       };
     }
   }
@@ -140,13 +124,15 @@ export class DocumentService {
     try {
       const { data, error } = await supabase
         .from('documents')
-        .select(`
+        .select(
+          `
           *,
           accident_reports(*),
           damage_reports(*),
           contract_changes(*),
           miscellaneous_documents(*)
-        `)
+        `
+        )
         .eq('id', documentId)
         .single();
 
@@ -170,7 +156,7 @@ export class DocumentService {
         .from('documents')
         .update({
           status,
-          ...(isDefined(metadata) ? { metadata } : {})
+          ...(isDefined(metadata) ? { metadata } : {}),
         })
         .eq('id', documentId)
         .select()
@@ -185,17 +171,4 @@ export class DocumentService {
       return null;
     }
   }
-
-  private normalizeChangeType(changeType: string): string {
-    const typeMap: Record<string, string> = {
-      'kündigung': 'kuendigung',
-      'vertragswechsel': 'vertragswechsel',
-      'trennung': 'vertragstrennung',
-      'änderung': 'anpassung',
-      'anpassung': 'anpassung'
-    };
-
-    const normalizedType = changeType?.toLowerCase().trim();
-    return typeMap[normalizedType] || 'anpassung';
-  }
-} 
+}

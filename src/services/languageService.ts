@@ -2,28 +2,75 @@ import { SupportedLanguages } from '@/types';
 
 const LANGUAGE_PATTERNS = {
   de: [
-    'der', 'die', 'das', 'und', 'ist', 'in', 'ich', 'zu', 'den', 'versicherung',
-    'schaden', 'unfall', 'vertrag', 'prämie', 'kündigung'
+    'der',
+    'die',
+    'das',
+    'und',
+    'ist',
+    'in',
+    'ich',
+    'zu',
+    'den',
+    'versicherung',
+    'schaden',
+    'unfall',
+    'vertrag',
+    'prämie',
+    'kündigung',
   ],
   fr: [
-    'le', 'la', 'les', 'et', 'est', 'dans', 'je', 'à', 'assurance', 'dommage',
-    'accident', 'contrat', 'prime', 'résiliation'
+    'le',
+    'la',
+    'les',
+    'et',
+    'est',
+    'dans',
+    'je',
+    'à',
+    'assurance',
+    'dommage',
+    'accident',
+    'contrat',
+    'prime',
+    'résiliation',
   ],
   it: [
-    'il', 'la', 'i', 'e', 'è', 'in', 'io', 'a', 'assicurazione', 'danno',
-    'incidente', 'contratto', 'premio', 'disdetta'
+    'il',
+    'la',
+    'i',
+    'e',
+    'è',
+    'in',
+    'io',
+    'a',
+    'assicurazione',
+    'danno',
+    'incidente',
+    'contratto',
+    'premio',
+    'disdetta',
   ],
   en: [
-    'the', 'and', 'is', 'in', 'i', 'to', 'insurance', 'damage', 'accident',
-    'contract', 'premium', 'cancellation'
-  ]
+    'the',
+    'and',
+    'is',
+    'in',
+    'i',
+    'to',
+    'insurance',
+    'damage',
+    'accident',
+    'contract',
+    'premium',
+    'cancellation',
+  ],
 };
 
 export const SUPPORTED_LANGUAGES: Record<SupportedLanguages, string> = {
   de: 'Deutsch',
   en: 'English',
   fr: 'Français',
-  it: 'Italiano'
+  it: 'Italiano',
 };
 
 export async function detectLanguage(text: string): Promise<SupportedLanguages> {
@@ -64,4 +111,4 @@ export async function translateText(
 ): Promise<string> {
   // Implementierung der Übersetzung für alle unterstützten Sprachen
   return text;
-} 
+}

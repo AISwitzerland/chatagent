@@ -19,4 +19,4 @@ declare module 'pdf2pic' {
 
   export function fromBuffer(buffer: Buffer, options?: ConvertOptions): Convert;
   export function fromPath(pdfPath: string, options?: ConvertOptions): Convert;
-} 
+}

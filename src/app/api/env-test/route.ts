@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import * as fs from 'fs';
-import * as path from 'path';
 
 export async function GET() {
   // Read all .env files content
   const envFiles = fs.readdirSync('.').filter(f => f.startsWith('.env'));
   const envContents: Record<string, string> = {};
-  
+
   for (const file of envFiles) {
     try {
       envContents[file] = fs.readFileSync(file, 'utf-8');
@@ -29,4 +28,4 @@ export async function GET() {
     envContents,
     processEnvKeys: Object.keys(process.env),
   });
-} 
+}

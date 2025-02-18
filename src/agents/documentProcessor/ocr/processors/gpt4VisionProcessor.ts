@@ -1,5 +1,11 @@
 import { OpenAI } from 'openai';
-import { OcrProcessor, OcrResult, OcrOptions, ImagePreprocessorOptions, OcrProcessorType } from '../types';
+import {
+  OcrProcessor,
+  OcrResult,
+  OcrOptions,
+  ImagePreprocessorOptions,
+  OcrProcessorType,
+} from '../types';
 import { imagePreprocessor } from '../utils/imagePreprocessor';
 import { ProcessingError } from '../../utils';
 import { performance } from 'perf_hooks';
@@ -13,9 +19,9 @@ export class GPT4VisionProcessor implements OcrProcessor {
     if (!process.env.OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY ist nicht konfiguriert');
     }
-    
+
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
+      apiKey: process.env.OPENAI_API_KEY,
     });
   }
 
@@ -35,10 +41,13 @@ export class GPT4VisionProcessor implements OcrProcessor {
       const preprocessOptions: ImagePreprocessorOptions = {
         mimeType: options.documentContext?.mimeType || 'image/jpeg',
         enhanceImage: options.enhanceImage,
-        minQuality: options.minQuality
+        minQuality: options.minQuality,
       };
 
-      const { processedImage, metadata } = await imagePreprocessor.preprocessImage(image, preprocessOptions);
+      const { processedImage, metadata } = await imagePreprocessor.preprocessImage(
+        image,
+        preprocessOptions
+      );
       const base64Image = await imagePreprocessor.convertToBase64(processedImage);
 
       // GPT-4 Vision API aufrufen
@@ -47,30 +56,30 @@ export class GPT4VisionProcessor implements OcrProcessor {
         messages: [
           {
             role: 'system',
-            content: OCR_CONFIG.gptVision.systemPrompt
+            content: OCR_CONFIG.gptVision.systemPrompt,
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: `Analysiere dieses Dokument und extrahiere alle relevanten Informationen. Das Dokument ist: ${options.documentContext?.fileName || 'Unbekannt'}`
+                text: `Analysiere dieses Dokument und extrahiere alle relevanten Informationen. Das Dokument ist: ${options.documentContext?.fileName || 'Unbekannt'}`,
               },
               {
                 type: 'image_url',
                 image_url: {
-                  url: `data:${preprocessOptions.mimeType};base64,${base64Image}`
-                }
-              }
-            ]
-          }
+                  url: `data:${preprocessOptions.mimeType};base64,${base64Image}`,
+                },
+              },
+            ],
+          },
         ],
         max_tokens: OCR_CONFIG.gptVision.maxTokens,
-        temperature: OCR_CONFIG.gptVision.temperature
+        temperature: OCR_CONFIG.gptVision.temperature,
       });
 
       const result = response.choices[0]?.message?.content;
-      
+
       if (!result) {
         throw new Error('Keine Antwort von GPT-Vision erhalten');
       }
@@ -89,8 +98,8 @@ export class GPT4VisionProcessor implements OcrProcessor {
         metadata: {
           ocrProcessor: this.getName(),
           ocrConfidence: confidence,
-          processingTime
-        }
+          processingTime,
+        },
       };
 
       return {
@@ -98,13 +107,12 @@ export class GPT4VisionProcessor implements OcrProcessor {
         confidence,
         metadata: {
           ...metadata,
-          documentContext: options.documentContext
+          documentContext: options.documentContext,
         },
         processingTime,
         processor: this.getName(),
-        context
+        context,
       };
-
     } catch (error: any) {
       const processingError = new ProcessingError(
         `GPT-Vision Verarbeitungsfehler: ${error.message}`,
@@ -122,12 +130,12 @@ export class GPT4VisionProcessor implements OcrProcessor {
     // Zusätzliche Faktoren für die Konfidenzberechnung
     const hasContent = response.choices[0]?.message?.content?.length > 0;
     const contentLength = response.choices[0]?.message?.content?.length || 0;
-    
+
     // Reduziere Konfidenz wenn kein Inhalt
     if (!hasContent) {
       confidence *= 0.5;
     }
-    
+
     // Erhöhe Konfidenz bei längeren Antworten
     if (contentLength > 500) {
       confidence *= 1.2;
@@ -136,4 +144,4 @@ export class GPT4VisionProcessor implements OcrProcessor {
     // Stelle sicher, dass die Konfidenz zwischen 0 und 1 liegt
     return Math.min(Math.max(confidence, 0), 1);
   }
-} 
+}

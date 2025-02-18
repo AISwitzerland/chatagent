@@ -1,9 +1,11 @@
-import { Database } from '../types/database';
 import OpenAI from 'openai';
 import { isNonEmptyString, ValidationError, isErrorWithMessage } from '../types/utils';
-import { API } from '../types/constants';
 
-export type DocumentType = 'accident_report' | 'damage_report' | 'contract_change' | 'miscellaneous';
+export type DocumentType =
+  | 'accident_report'
+  | 'damage_report'
+  | 'contract_change'
+  | 'miscellaneous';
 
 export interface ClassificationResult {
   type: DocumentType;
@@ -53,7 +55,7 @@ export class DocumentClassifier {
 
     try {
       const initialClassification = this.performInitialClassification(text);
-      
+
       // If in test mode or no OpenAI client, return initial classification
       if (this.isTestMode || !this.openai) {
         return {
@@ -61,8 +63,8 @@ export class DocumentClassifier {
           metadata: {
             modelUsed: 'rule-based',
             processingTime: Date.now() - startTime,
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         };
       }
 
@@ -75,8 +77,8 @@ export class DocumentClassifier {
           metadata: {
             modelUsed: 'gpt-4',
             processingTime: Date.now() - startTime,
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         };
       }
 
@@ -85,8 +87,8 @@ export class DocumentClassifier {
         metadata: {
           modelUsed: 'rule-based',
           processingTime: Date.now() - startTime,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
     } catch (error) {
       if (isErrorWithMessage(error)) {
@@ -99,21 +101,21 @@ export class DocumentClassifier {
 
   private performInitialClassification(text: string): Omit<ClassificationResult, 'metadata'> {
     const normalizedText = text.toLowerCase();
-    
+
     // Keywords für verschiedene Dokumenttypen mit Gewichtung
     const keywords = {
       accident_report: {
         high: ['unfall', 'kollision', 'zusammenstoß'],
-        medium: ['verletzung', 'schaden', 'unfallbericht']
+        medium: ['verletzung', 'schaden', 'unfallbericht'],
       },
       damage_report: {
         high: ['schadensmeldung', 'wasserschaden', 'beschädigung'],
-        medium: ['schaden', 'defekt', 'reparatur', 'mangel']
+        medium: ['schaden', 'defekt', 'reparatur', 'mangel'],
       },
       contract_change: {
         high: ['vertragsänderung', 'vertragskündigung', 'vertragsanpassung'],
-        medium: ['vertrag', 'änderung', 'anpassung', 'kündigung']
-      }
+        medium: ['vertrag', 'änderung', 'anpassung', 'kündigung'],
+      },
     };
 
     let maxScore = 0;
@@ -122,12 +124,12 @@ export class DocumentClassifier {
     // Berechne Score für jeden Dokumenttyp mit gewichteten Keywords
     for (const [type, typeKeywords] of Object.entries(keywords)) {
       let score = 0;
-      
+
       // Hochgewichtete Keywords (2 Punkte)
       typeKeywords.high.forEach(keyword => {
         if (normalizedText.includes(keyword)) score += 2;
       });
-      
+
       // Mittelgewichtete Keywords (1 Punkt)
       typeKeywords.medium.forEach(keyword => {
         if (normalizedText.includes(keyword)) score += 1;
@@ -148,7 +150,7 @@ export class DocumentClassifier {
     return {
       type: documentType,
       confidence: maxScore,
-      extractedData
+      extractedData,
     };
   }
 
@@ -174,8 +176,8 @@ export class DocumentClassifier {
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [{ role: "user", content: prompt }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
       });
 
@@ -191,7 +193,7 @@ export class DocumentClassifier {
 
   private extractDataByRules(text: string, type: DocumentType): ExtractedData {
     const data: ExtractedData = {};
-    
+
     // Datum-Extraktion (Format: DD.MM.YYYY)
     const dateRegex = /(\d{2})\.(\d{2})\.(\d{4})/g;
     const dates = text.match(dateRegex);
@@ -243,8 +245,8 @@ export class DocumentClassifier {
       ...initial,
       extractedData: {
         ...initial.extractedData,
-        ...gpt.extractedData
-      }
+        ...gpt.extractedData,
+      },
     };
   }
-} 
+}

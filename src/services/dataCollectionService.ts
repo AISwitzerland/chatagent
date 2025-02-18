@@ -4,19 +4,19 @@ export function getNextPrompt(step: DataCollectionStep, data: Partial<UserContac
   switch (step) {
     case 'collecting_name':
       return 'Bitte geben Sie mir Ihren vollständigen Namen.';
-    
+
     case 'collecting_email':
       return `Danke ${data.name}. Nun bräuchte ich noch Ihre Email.`;
-    
+
     case 'collecting_phone':
       return 'Danke, nun bräuchte ich noch Ihre Telefonnummer.';
-    
+
     case 'confirming_data':
       return `Danke vielmals. Bitte bestätigen Sie, ob Ihre Daten korrekt sind:\n\nName: ${data.name}\nEmail: ${data.email}\nTelefon: ${data.phone}`;
-    
+
     case 'ready_for_upload':
       return 'Perfekt. Nun können wir mit dem Hochladen Ihres Dokuments weitermachen.';
-    
+
     default:
       return '';
   }
@@ -28,11 +28,12 @@ export function validateInput(step: DataCollectionStep, input: string): string |
       if (input.length < 3) return 'Der Name muss mindestens 3 Zeichen lang sein.';
       if (!/^[a-zA-ZäöüÄÖÜß ]+$/.test(input)) return 'Der Name darf nur Buchstaben enthalten.';
       break;
-    
+
     case 'collecting_email':
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)) return 'Bitte geben Sie eine gültige Email-Adresse ein.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input))
+        return 'Bitte geben Sie eine gültige Email-Adresse ein.';
       break;
-    
+
     case 'collecting_phone':
       if (!/^[0-9+\s-]{8,}$/.test(input)) return 'Bitte geben Sie eine gültige Telefonnummer ein.';
       break;
@@ -65,7 +66,7 @@ export function updateDataCollectionState(
   if (validationError) {
     return {
       ...state,
-      retries: state.retries + 1
+      retries: state.retries + 1,
     };
   }
 
@@ -74,14 +75,14 @@ export function updateDataCollectionState(
       return {
         ...state,
         confirmed: true,
-        step: 'ready_for_upload'
+        step: 'ready_for_upload',
       };
     } else {
       return {
         step: 'collecting_name',
         data: {},
         confirmed: false,
-        retries: 0
+        retries: 0,
       };
     }
   }
@@ -103,6 +104,6 @@ export function updateDataCollectionState(
     ...state,
     data: updatedData,
     step: getNextStep(state.step, input),
-    retries: 0
+    retries: 0,
   };
-} 
+}

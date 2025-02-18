@@ -8,10 +8,10 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
-export default function ChatInput({ 
-  onSendMessage, 
+export default function ChatInput({
+  onSendMessage,
   disabled = false,
-  placeholder = "Schreiben Sie eine Nachricht..."
+  placeholder = 'Schreiben Sie eine Nachricht...',
 }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -42,7 +42,7 @@ export default function ChatInput({
       <textarea
         ref={textareaRef}
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={e => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
         disabled={disabled}
         placeholder={placeholder}
@@ -58,4 +58,4 @@ export default function ChatInput({
       </button>
     </div>
   );
-} 
+}

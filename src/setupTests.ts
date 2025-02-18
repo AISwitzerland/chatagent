@@ -58,5 +58,5 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock crypto.randomUUID
 Object.defineProperty(global.crypto, 'randomUUID', {
-  value: () => '123e4567-e89b-12d3-a456-426614174000'
-}); 
+  value: () => '123e4567-e89b-12d3-a456-426614174000',
+});

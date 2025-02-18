@@ -30,4 +30,4 @@ export interface OcrProcessor {
   processImage(image: Buffer, options?: OcrOptions): Promise<OcrResult>;
   getName(): string;
   isAvailable(): Promise<boolean>;
-} 
+}

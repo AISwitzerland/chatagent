@@ -13,7 +13,8 @@ module.exports = {
   },
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: 'tsconfig.json'
+      tsconfig: 'tsconfig.json',
+      babelConfig: true
     }]
   },
   testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$',
@@ -32,5 +33,8 @@ module.exports = {
       lines: 80,
       statements: 80
     }
-  }
-}; 
+  },
+  transformIgnorePatterns: [
+    '/node_modules/(?!(@testing-library|@babel|next)/)'
+  ]
+};

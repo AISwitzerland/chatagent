@@ -17,16 +17,8 @@ export default function ChatWidget() {
         <div className="bg-white rounded-lg shadow-xl w-96 h-[600px] transition-all duration-300 ease-in-out">
           <div className="flex justify-between items-center p-4 border-b">
             <h3 className="text-lg font-semibold">Swiss Insurance Chat</h3>
-            <button
-              onClick={toggleChat}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+            <button onClick={toggleChat} className="text-gray-500 hover:text-gray-700">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -50,4 +42,4 @@ export default function ChatWidget() {
       )}
     </div>
   );
-} 
+}

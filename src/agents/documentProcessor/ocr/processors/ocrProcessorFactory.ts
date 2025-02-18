@@ -21,23 +21,23 @@ export class OcrProcessorFactory {
 
   async getProcessor(options?: OcrOptions): Promise<OcrProcessor> {
     const preferredProcessor = options?.preferredProcessor;
-    
+
     if (preferredProcessor) {
       const processor = this.processors.get(preferredProcessor);
-      if (processor && await processor.isAvailable()) {
+      if (processor && (await processor.isAvailable())) {
         return processor;
       }
     }
 
     // Versuche zuerst GPT-4 Vision
     const gpt4Processor = this.processors.get('gpt4-vision');
-    if (gpt4Processor && await gpt4Processor.isAvailable()) {
+    if (gpt4Processor && (await gpt4Processor.isAvailable())) {
       return gpt4Processor;
     }
 
     // Fallback zu Tesseract
     const tesseractProcessor = this.processors.get('tesseract');
-    if (tesseractProcessor && await tesseractProcessor.isAvailable()) {
+    if (tesseractProcessor && (await tesseractProcessor.isAvailable())) {
       return tesseractProcessor;
     }
 
@@ -56,4 +56,4 @@ export class OcrProcessorFactory {
 
     return availableProcessors;
   }
-} 
+}

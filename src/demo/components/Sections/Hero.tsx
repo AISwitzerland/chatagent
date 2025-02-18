@@ -7,11 +7,9 @@ export default function Hero() {
     <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
       <div className="container mx-auto px-4 py-20">
         <div className="max-w-3xl">
-          <h1 className="text-5xl font-bold mb-6">
-            Ihre Sicherheit ist unsere Priorität
-          </h1>
+          <h1 className="text-5xl font-bold mb-6">Ihre Sicherheit ist unsere Priorität</h1>
           <p className="text-xl mb-8">
-            Swiss Insurance AG - Ihr vertrauenswürdiger Partner für alle Versicherungsfragen. 
+            Swiss Insurance AG - Ihr vertrauenswürdiger Partner für alle Versicherungsfragen.
             Profitieren Sie von unserer jahrelangen Erfahrung und massgeschneiderten Lösungen.
           </p>
           <div className="space-x-4">
@@ -22,7 +20,7 @@ export default function Hero() {
               Mehr erfahren
             </button>
           </div>
-          
+
           <div className="mt-12 grid grid-cols-3 gap-8">
             <div className="text-center">
               <div className="text-3xl font-bold mb-2">50+</div>
@@ -41,4 +39,4 @@ export default function Hero() {
       </div>
     </div>
   );
-} 
+}

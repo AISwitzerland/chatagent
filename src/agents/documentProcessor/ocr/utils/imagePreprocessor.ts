@@ -12,12 +12,12 @@ const PROCESSING_CONFIG = {
     maxWidth: 2000,
     maxHeight: 2000,
     quality: 90,
-    format: 'png'
+    format: 'png',
   },
   pdf: {
     density: 300,
-    format: 'png'
-  }
+    format: 'png',
+  },
 };
 
 class ImagePreprocessor {
@@ -32,7 +32,10 @@ class ImagePreprocessor {
     return ImagePreprocessor.instance;
   }
 
-  public async preprocessImage(image: Buffer, options: ImagePreprocessorOptions): Promise<ImagePreprocessorResult> {
+  public async preprocessImage(
+    image: Buffer,
+    options: ImagePreprocessorOptions
+  ): Promise<ImagePreprocessorResult> {
     try {
       if (!image) {
         throw new ProcessingError(
@@ -43,11 +46,7 @@ class ImagePreprocessor {
       }
 
       if (!options.mimeType) {
-        throw new ProcessingError(
-          'Kein MIME-Typ angegeben',
-          'image-preprocessing',
-          null
-        );
+        throw new ProcessingError('Kein MIME-Typ angegeben', 'image-preprocessing', null);
       }
 
       // PDF-Verarbeitung
@@ -55,7 +54,7 @@ class ImagePreprocessor {
         const timestamp = Date.now();
         const tempDir = tmpdir();
         const tempPdfPath = join(tempDir, `temp-${timestamp}.pdf`);
-        
+
         try {
           // PDF temporär speichern
           writeFileSync(tempPdfPath, image);
@@ -66,25 +65,21 @@ class ImagePreprocessor {
             savePath: tempDir,
             format: PROCESSING_CONFIG.pdf.format,
             width: PROCESSING_CONFIG.imageOptimization.maxWidth,
-            height: PROCESSING_CONFIG.imageOptimization.maxHeight
+            height: PROCESSING_CONFIG.imageOptimization.maxHeight,
           };
 
           // PDF zu PNG konvertieren
           const convert = fromPath(tempPdfPath, pdfOptions);
           const conversionResult = await convert(1);
           if (!conversionResult) {
-            throw new ProcessingError(
-              'PDF-Konvertierung fehlgeschlagen',
-              'pdf-conversion',
-              null
-            );
+            throw new ProcessingError('PDF-Konvertierung fehlgeschlagen', 'pdf-conversion', null);
           }
 
           // Log erfolgreiche Konvertierung
           console.log('PDF-Konvertierung erfolgreich:', {
             page: conversionResult.page,
             name: conversionResult.name,
-            size: conversionResult.size
+            size: conversionResult.size,
           });
 
           // Warte kurz, um sicherzustellen, dass die Datei geschrieben wurde
@@ -99,7 +94,7 @@ class ImagePreprocessor {
               width: PROCESSING_CONFIG.imageOptimization.maxWidth,
               height: PROCESSING_CONFIG.imageOptimization.maxHeight,
               fit: 'inside',
-              withoutEnlargement: true
+              withoutEnlargement: true,
             })
             .toBuffer();
 
@@ -109,14 +104,13 @@ class ImagePreprocessor {
             width: PROCESSING_CONFIG.imageOptimization.maxWidth,
             height: PROCESSING_CONFIG.imageOptimization.maxHeight,
             quality: 1.0,
-            enhancementApplied: true
+            enhancementApplied: true,
           };
 
           return {
             processedImage,
-            metadata: imageMetadata
+            metadata: imageMetadata,
           };
-
         } finally {
           // Temporäre Dateien aufräumen
           try {
@@ -136,10 +130,7 @@ class ImagePreprocessor {
 
       // Qualitätsverbesserungen anwenden, wenn gewünscht
       if (options.enhanceImage) {
-        sharpInstance = sharpInstance
-          .normalize()
-          .sharpen()
-          .gamma(1.2);
+        sharpInstance = sharpInstance.normalize().sharpen().gamma(1.2);
         enhancementApplied = true;
       }
 
@@ -147,7 +138,7 @@ class ImagePreprocessor {
       const processedImage = await sharpInstance
         .png({
           quality: 100,
-          force: true
+          force: true,
         })
         .toBuffer();
 
@@ -157,23 +148,18 @@ class ImagePreprocessor {
         width: metadata.width,
         height: metadata.height,
         quality: this.estimateImageQuality(metadata),
-        enhancementApplied
+        enhancementApplied,
       };
 
       return {
         processedImage,
-        metadata: imageMetadata
+        metadata: imageMetadata,
       };
-
     } catch (error) {
       if (error instanceof ProcessingError) {
         throw error;
       }
-      throw new ProcessingError(
-        'Fehler bei der Bildvorverarbeitung',
-        'image-preprocessing',
-        error
-      );
+      throw new ProcessingError('Fehler bei der Bildvorverarbeitung', 'image-preprocessing', error);
     }
   }
 
@@ -187,9 +173,11 @@ class ImagePreprocessor {
     // Qualität basierend auf der Auflösung
     if (metadata.width && metadata.height) {
       const resolution = metadata.width * metadata.height;
-      if (resolution < 100000) { // Weniger als 0.1 Megapixel
+      if (resolution < 100000) {
+        // Weniger als 0.1 Megapixel
         quality *= 0.6;
-      } else if (resolution < 1000000) { // Weniger als 1 Megapixel
+      } else if (resolution < 1000000) {
+        // Weniger als 1 Megapixel
         quality *= 0.8;
       }
     }
@@ -218,4 +206,4 @@ class ImagePreprocessor {
   }
 }
 
-export const imagePreprocessor = ImagePreprocessor.getInstance(); 
+export const imagePreprocessor = ImagePreprocessor.getInstance();

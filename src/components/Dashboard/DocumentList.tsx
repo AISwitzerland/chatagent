@@ -33,9 +33,9 @@ export default function DocumentList() {
         {
           event: '*',
           schema: 'public',
-          table: 'processing_status'
+          table: 'processing_status',
         },
-        (payload) => {
+        payload => {
           if (payload.new) {
             const updatedDoc = payload.new as Document;
             setDocuments(prev => {
@@ -125,9 +125,7 @@ export default function DocumentList() {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <h2 className="text-xl font-semibold mb-4">Verarbeitete Dokumente</h2>
-        <div className="p-4 text-red-700 bg-red-100 rounded-lg">
-          {error}
-        </div>
+        <div className="p-4 text-red-700 bg-red-100 rounded-lg">{error}</div>
       </div>
     );
   }
@@ -136,29 +134,20 @@ export default function DocumentList() {
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <h2 className="text-xl font-semibold mb-4">
         Verarbeitete Dokumente
-        <span className="ml-2 text-sm font-normal text-gray-500">
-          ({documents.length})
-        </span>
+        <span className="ml-2 text-sm font-normal text-gray-500">({documents.length})</span>
       </h2>
 
       {documents.length === 0 ? (
-        <div className="text-gray-500 text-center py-8">
-          Keine Dokumente gefunden
-        </div>
+        <div className="text-gray-500 text-center py-8">Keine Dokumente gefunden</div>
       ) : (
         <>
           <div className="space-y-4">
-            {documents.map((doc) => (
-              <div
-                key={doc.process_id}
-                className="border rounded-lg p-4"
-              >
+            {documents.map(doc => (
+              <div key={doc.process_id} className="border rounded-lg p-4">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <div className="font-medium">{doc.message}</div>
-                    <div className="text-sm text-gray-500 mt-1">
-                      ID: {doc.process_id}
-                    </div>
+                    <div className="text-sm text-gray-500 mt-1">ID: {doc.process_id}</div>
                   </div>
                   <span className={`px-2 py-1 rounded-full text-sm ${getStatusColor(doc.status)}`}>
                     {getStatusText(doc.status)}
@@ -221,4 +210,4 @@ export default function DocumentList() {
       )}
     </div>
   );
-} 
+}

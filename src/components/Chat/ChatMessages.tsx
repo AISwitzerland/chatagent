@@ -14,13 +14,13 @@ interface ChatMessagesProps {
   onUploadError?: (error: string) => void;
 }
 
-export default function ChatMessages({ 
-  messages, 
-  loading, 
+export default function ChatMessages({
+  messages,
+  loading,
   showUpload = false,
   userData,
   onUploadComplete,
-  onUploadError
+  onUploadError,
 }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -34,16 +34,14 @@ export default function ChatMessages({
 
   return (
     <div className="flex-1 overflow-y-auto space-y-4 p-4">
-      {messages.map((message) => (
+      {messages.map(message => (
         <div
           key={message.id}
           className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
         >
           <div
             className={`max-w-[80%] rounded-lg p-4 ${
-              message.role === 'user'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white border shadow-sm'
+              message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border shadow-sm'
             }`}
           >
             <p className="whitespace-pre-wrap">{message.content}</p>
@@ -63,7 +61,7 @@ export default function ChatMessages({
       )}
       {showUpload && userData && (
         <div className="mt-4">
-          <DocumentUpload 
+          <DocumentUpload
             userData={userData}
             onUploadComplete={onUploadComplete}
             onUploadError={onUploadError}
@@ -73,4 +71,4 @@ export default function ChatMessages({
       <div ref={messagesEndRef} />
     </div>
   );
-} 
+}

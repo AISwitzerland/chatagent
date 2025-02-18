@@ -32,28 +32,31 @@ export interface FAQ extends BaseEntity {
   question: string;
   answer: string;
   category: string;
-  languages: Record<SupportedLanguages, {
-    question: string;
-    answer: string;
-  }>;
+  languages: Record<
+    SupportedLanguages,
+    {
+      question: string;
+      answer: string;
+    }
+  >;
   tags?: string[];
   lastUpdated: string;
 }
 
 // Fügen wir neue Types für die Intent-Erkennung hinzu
-export type IntentCategory = 
-  | 'INFORMATION'    // Allgemeine Informationsanfragen
-  | 'PRICE'         // Preisanfragen
-  | 'CLAIM'         // Schadensmeldungen
-  | 'COVERAGE'      // Deckungsanfragen
-  | 'DOCUMENT'      // Dokumentenanfragen
-  | 'COMPLAINT'     // Beschwerden
-  | 'CHANGE'        // Änderungswünsche
-  | 'CANCELLATION'  // Kündigungen
-  | 'EMERGENCY'     // Notfälle
-  | 'TECHNICAL';    // Technische Probleme
+export type IntentCategory =
+  | 'INFORMATION' // Allgemeine Informationsanfragen
+  | 'PRICE' // Preisanfragen
+  | 'CLAIM' // Schadensmeldungen
+  | 'COVERAGE' // Deckungsanfragen
+  | 'DOCUMENT' // Dokumentenanfragen
+  | 'COMPLAINT' // Beschwerden
+  | 'CHANGE' // Änderungswünsche
+  | 'CANCELLATION' // Kündigungen
+  | 'EMERGENCY' // Notfälle
+  | 'TECHNICAL'; // Technische Probleme
 
-export type EntityType = 
+export type EntityType =
   | 'insurance_type'
   | 'document_type'
   | 'action'
@@ -115,12 +118,7 @@ export interface CustomerProfile extends BaseEntity {
   metadata?: Record<string, unknown>;
 }
 
-export type InsuranceType = 
-  | 'life' 
-  | 'health' 
-  | 'property' 
-  | 'liability' 
-  | 'vehicle';
+export type InsuranceType = 'life' | 'health' | 'property' | 'liability' | 'vehicle';
 
 export interface Document extends BaseEntity {
   user_id: string;
@@ -150,7 +148,7 @@ export interface Appointment extends BaseEntity {
 }
 
 // Neue Typen für die Datenerfassung
-export type DataCollectionStep = 
+export type DataCollectionStep =
   | 'idle'
   | 'collecting_name'
   | 'collecting_email'
@@ -208,11 +206,12 @@ export interface TemporaryDocument extends BaseEntity {
 export interface AppointmentRequest extends BaseEntity {
   session_id: string;
   preferred_date: string[];
-  contact: Required<Pick<UserContactData, 'name' | 'email'>> & Partial<Pick<UserContactData, 'phone'>>;
+  contact: Required<Pick<UserContactData, 'name' | 'email'>> &
+    Partial<Pick<UserContactData, 'phone'>>;
   topic: string;
   insurance_type?: InsuranceType;
   preferred_language: SupportedLanguages;
   notes?: string;
   status: 'pending' | 'confirmed' | 'rejected';
   priority?: Urgency;
-} 
+}

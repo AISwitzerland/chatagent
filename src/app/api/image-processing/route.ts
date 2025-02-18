@@ -6,22 +6,19 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const file = formData.get('file') as File;
-    
+
     if (!file) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    
+
     // Verarbeite basierend auf dem Dateityp
     if (file.type === 'application/pdf') {
       // PDF verarbeiten
       const pdfDoc = await PDFDocument.load(buffer);
       const pages = pdfDoc.getPages();
-      
+
       return NextResponse.json({
         success: true,
         metadata: {
@@ -29,7 +26,7 @@ export async function POST(req: Request) {
           pageCount: pages.length,
           quality: 1.0,
         },
-        processedImage: buffer.toString('base64')
+        processedImage: buffer.toString('base64'),
       });
     } else if (file.type.startsWith('image/')) {
       // Bild verarbeiten
@@ -37,10 +34,10 @@ export async function POST(req: Request) {
 
       const processedImage = await sharp(buffer)
         .resize({
-          width: 4096,
-          height: 4096,
+          width: metadata.width && metadata.width > 2000 ? 2000 : metadata.width,
+          height: metadata.height && metadata.height > 2000 ? 2000 : metadata.height,
           fit: 'inside',
-          withoutEnlargement: true
+          withoutEnlargement: true,
         })
         .normalize()
         .sharpen()
@@ -56,17 +53,13 @@ export async function POST(req: Request) {
           width: processedMetadata.width || 0,
           height: processedMetadata.height || 0,
           quality: 1.0,
-          enhancementApplied: true
+          enhancementApplied: true,
         },
-        processedImage: processedImage.toString('base64')
+        processedImage: processedImage.toString('base64'),
       });
     } else {
-      return NextResponse.json(
-        { error: `Unsupported file type: ${file.type}` },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: `Unsupported file type: ${file.type}` }, { status: 400 });
     }
-
   } catch (error: any) {
     console.error('Document processing error:', error);
     return NextResponse.json(
@@ -74,4 +67,4 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-} 
+}

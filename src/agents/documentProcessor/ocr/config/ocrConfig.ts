@@ -20,7 +20,7 @@ export const OCR_CONFIG = {
     - Unfallort und Beschreibung
     - Arbeitgeber-Informationen
     
-    Formatiere die Ausgabe in klar strukturierten Abschnitten mit Überschriften.`
+    Formatiere die Ausgabe in klar strukturierten Abschnitten mit Überschriften.`,
   },
 
   // Tesseract Konfiguration (Fallback)
@@ -28,7 +28,7 @@ export const OCR_CONFIG = {
     languages: ['deu', 'eng'],
     workerPath: 'https://unpkg.com/tesseract.js@v5.0.3/dist/worker.min.js',
     corePath: 'https://unpkg.com/tesseract.js-core@v5.0.3/tesseract-core.wasm.js',
-    logger: (message: any) => console.log(message)
+    logger: (message: any) => console.log(message),
   },
 
   // Unterstützte Dateitypen
@@ -37,8 +37,8 @@ export const OCR_CONFIG = {
     document: [
       'application/pdf',
       'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ]
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ],
   },
 
   // Verarbeitungsoptionen
@@ -48,9 +48,9 @@ export const OCR_CONFIG = {
       maxWidth: 2000,
       maxHeight: 2000,
       quality: 90,
-      format: 'png'
+      format: 'png',
     },
-    timeout: 30000 // 30 Sekunden
+    timeout: 30000, // 30 Sekunden
   },
 
   // Dokumenttypen und deren spezifische Extraktionsregeln
@@ -61,15 +61,15 @@ export const OCR_CONFIG = {
         schaden_nummer: /Schaden-Nummer\s*(\d+)/i,
         ahv_nummer: /AHV-Nummer\s*([\d.]+)/i,
         unfall_datum: /(\d{1,2}\.\d{1,2}\.\d{4})/i,
-        unfall_zeit: /(\d{2}:\d{2})/i
-      }
+        unfall_zeit: /(\d{2}:\d{2})/i,
+      },
     },
     damage_report: {
       requiredFields: ['versicherungsnummer', 'name', 'schaden_datum', 'schaden_beschreibung'],
       patterns: {
         versicherungsnummer: /Versicherungsnummer\s*:\s*(\d+)/i,
-        schaden_datum: /Schadensdatum\s*:\s*(\d{1,2}\.\d{1,2}\.\d{4})/i
-      }
-    }
-  }
-}; 
+        schaden_datum: /Schadensdatum\s*:\s*(\d{1,2}\.\d{1,2}\.\d{4})/i,
+      },
+    },
+  },
+};

@@ -10,19 +10,13 @@ export const metadata: Metadata = {
   description: 'Intelligente Dokumentenverarbeitung und Kundenbetreuung',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de">
       <body className={inter.className}>
         <Navbar />
-        <main className="min-h-[calc(100vh-64px)]">
-          {children}
-        </main>
+        <main className="min-h-[calc(100vh-64px)]">{children}</main>
       </body>
     </html>
   );
-} 
+}

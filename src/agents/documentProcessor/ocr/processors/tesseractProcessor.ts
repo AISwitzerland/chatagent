@@ -42,14 +42,11 @@ export class TesseractProcessor implements OcrProcessor {
     }
 
     try {
-      const { processedImage, metadata } = await imagePreprocessor.preprocessImage(
-        image,
-        {
-          mimeType: options.documentContext?.mimeType ?? 'image/jpeg',
-          enhanceImage: options.enhanceImage ?? true,
-          minQuality: options.minQuality ?? 0.7
-        }
-      );
+      const { processedImage, metadata } = await imagePreprocessor.preprocessImage(image, {
+        mimeType: options.documentContext?.mimeType ?? 'image/jpeg',
+        enhanceImage: options.enhanceImage ?? true,
+        minQuality: options.minQuality ?? 0.7,
+      });
 
       const result = await this.worker.recognize(processedImage);
       const endTime = performance.now();
@@ -60,7 +57,7 @@ export class TesseractProcessor implements OcrProcessor {
         confidence: result.data.confidence / 100,
         metadata: {
           ...metadata,
-          documentContext: options.documentContext
+          documentContext: options.documentContext,
         },
         processingTime,
         processor: this.getName(),
@@ -73,9 +70,9 @@ export class TesseractProcessor implements OcrProcessor {
           metadata: {
             ocrProcessor: this.getName(),
             ocrConfidence: result.data.confidence / 100,
-            processingTime
-          }
-        }
+            processingTime,
+          },
+        },
       };
     } catch (error) {
       const tesseractError = error as TesseractError;
@@ -85,7 +82,7 @@ export class TesseractProcessor implements OcrProcessor {
         {
           originalError: tesseractError,
           code: tesseractError.code,
-          details: tesseractError.details
+          details: tesseractError.details,
         }
       );
     }
@@ -97,4 +94,4 @@ export class TesseractProcessor implements OcrProcessor {
       this.worker = null;
     }
   }
-} 
+}

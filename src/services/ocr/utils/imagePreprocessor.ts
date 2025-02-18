@@ -7,10 +7,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 
 export class ImagePreprocessor {
-  async preprocessImage(
-    buffer: Buffer,
-    mimeType: string
-  ): Promise<Buffer> {
+  async preprocessImage(buffer: Buffer, mimeType: string): Promise<Buffer> {
     try {
       // Wenn es sich um ein PDF handelt, konvertieren wir es zu einem Bild
       if (mimeType === 'application/pdf') {
@@ -18,7 +15,7 @@ export class ImagePreprocessor {
         const tempDir = tmpdir();
         const tempPdfPath = join(tempDir, `temp-${timestamp}.pdf`);
         const tempPngPath = join(tempDir, `temp-${timestamp}.png`);
-        
+
         try {
           // PDF temporär speichern
           writeFileSync(tempPdfPath, buffer);
@@ -28,9 +25,9 @@ export class ImagePreprocessor {
             density: 300,
             saveFilename: `temp-${timestamp}`,
             savePath: tempDir,
-            format: "png",
+            format: 'png',
             width: OCR_CONFIG.processing.imageOptimization.maxWidth,
-            height: OCR_CONFIG.processing.imageOptimization.maxHeight
+            height: OCR_CONFIG.processing.imageOptimization.maxHeight,
           };
 
           console.log('Konvertiere PDF mit Optionen:', options);
@@ -38,7 +35,7 @@ export class ImagePreprocessor {
           // PDF zu PNG konvertieren
           const convert = fromPath(tempPdfPath, options);
           const result = await convert(1);
-          
+
           console.log('Konvertierungsergebnis:', result);
 
           // Warte kurz, um sicherzustellen, dass die Datei geschrieben wurde
@@ -54,7 +51,7 @@ export class ImagePreprocessor {
               width: OCR_CONFIG.processing.imageOptimization.maxWidth,
               height: OCR_CONFIG.processing.imageOptimization.maxHeight,
               fit: 'inside',
-              withoutEnlargement: true
+              withoutEnlargement: true,
             })
             .toBuffer();
 
@@ -72,7 +69,7 @@ export class ImagePreprocessor {
       }
 
       const config = OCR_CONFIG.processing.imageOptimization;
-      
+
       // Sharp-Instance erstellen
       let image = sharp(buffer);
 
@@ -85,7 +82,7 @@ export class ImagePreprocessor {
           width: config.maxWidth,
           height: config.maxHeight,
           fit: 'inside',
-          withoutEnlargement: true
+          withoutEnlargement: true,
         })
         .normalize() // Kontrast automatisch optimieren
         .sharpen() // Schärfe verbessern
@@ -100,7 +97,6 @@ export class ImagePreprocessor {
 
       // Verarbeitetes Bild als Buffer zurückgeben
       return await image.toBuffer();
-
     } catch (error: any) {
       const processingError: ProcessingError = new Error(
         `Bildvorverarbeitung fehlgeschlagen: ${error.message}`
@@ -116,7 +112,10 @@ export class ImagePreprocessor {
   }
 
   // Hilfsmethode zur Qualitätsprüfung
-  async checkImageQuality(buffer: Buffer, mimeType: string): Promise<{
+  async checkImageQuality(
+    buffer: Buffer,
+    mimeType: string
+  ): Promise<{
     quality: number;
     warnings: string[];
   }> {
@@ -125,7 +124,7 @@ export class ImagePreprocessor {
       if (mimeType === 'application/pdf') {
         return {
           quality: 1.0,
-          warnings: []
+          warnings: [],
         };
       }
 
@@ -147,7 +146,10 @@ export class ImagePreprocessor {
       // Format- und Qualitätsprüfung für JPEG
       if (metadata.format === 'jpeg' && metadata.width && metadata.height) {
         // Schätzen der JPEG-Qualität basierend auf der Dateigröße
-        const estimatedQuality = Math.min(100, Math.floor((buffer.length / (metadata.width * metadata.height)) * 100));
+        const estimatedQuality = Math.min(
+          100,
+          Math.floor((buffer.length / (metadata.width * metadata.height)) * 100)
+        );
         if (estimatedQuality < 70) {
           warnings.push('JPEG-Qualität könnte zu niedrig sein');
           qualityScore *= 0.9;
@@ -156,9 +158,8 @@ export class ImagePreprocessor {
 
       return {
         quality: qualityScore,
-        warnings
+        warnings,
       };
-
     } catch (error: any) {
       const processingError: ProcessingError = new Error(
         `Qualitätsprüfung fehlgeschlagen: ${error.message}`

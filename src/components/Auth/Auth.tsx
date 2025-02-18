@@ -14,65 +14,71 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = useCallback(async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    if (loading) return;
+  const handleLogin = useCallback(
+    async (e: React.FormEvent): Promise<void> => {
+      e.preventDefault();
+      if (loading) return;
 
-    setLoading(true);
-    setError(null);
+      setLoading(true);
+      setError(null);
 
-    try {
-      const { data, error: loginError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      try {
+        const { data, error: loginError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-      if (loginError) throw loginError;
-      
-      // Erfolgreicher Login
-      window.location.href = '/dashboard';
-    } catch (error) {
-      const authError = error as AuthError;
-      setError(authError.message || 'Anmeldung fehlgeschlagen');
-      console.error('Login-Fehler:', {
-        message: authError.message,
-        code: authError.code,
-        status: authError.status
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [email, password, loading]);
+        if (loginError) throw loginError;
 
-  const handleSignUp = useCallback(async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    if (loading) return;
+        // Erfolgreicher Login
+        window.location.href = '/dashboard';
+      } catch (error) {
+        const authError = error as AuthError;
+        setError(authError.message || 'Anmeldung fehlgeschlagen');
+        console.error('Login-Fehler:', {
+          message: authError.message,
+          code: authError.code,
+          status: authError.status,
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [email, password, loading]
+  );
 
-    setLoading(true);
-    setError(null);
+  const handleSignUp = useCallback(
+    async (e: React.FormEvent): Promise<void> => {
+      e.preventDefault();
+      if (loading) return;
 
-    try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      setLoading(true);
+      setError(null);
 
-      if (signUpError) throw signUpError;
+      try {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
 
-      // Erfolgreiche Registrierung
-      alert('Bitte überprüfen Sie Ihre E-Mail für den Bestätigungslink!');
-    } catch (error) {
-      const authError = error as AuthError;
-      setError(authError.message || 'Registrierung fehlgeschlagen');
-      console.error('Registrierungs-Fehler:', {
-        message: authError.message,
-        code: authError.code,
-        status: authError.status
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [email, password, loading]);
+        if (signUpError) throw signUpError;
+
+        // Erfolgreiche Registrierung
+        alert('Bitte überprüfen Sie Ihre E-Mail für den Bestätigungslink!');
+      } catch (error) {
+        const authError = error as AuthError;
+        setError(authError.message || 'Registrierung fehlgeschlagen');
+        console.error('Registrierungs-Fehler:', {
+          message: authError.message,
+          code: authError.code,
+          status: authError.status,
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [email, password, loading]
+  );
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -95,7 +101,7 @@ export default function Auth() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="E-Mail-Adresse"
@@ -105,7 +111,7 @@ export default function Auth() {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Passwort"
@@ -121,7 +127,7 @@ export default function Auth() {
             >
               {loading ? 'Wird geladen...' : 'Anmelden'}
             </button>
-            
+
             <button
               onClick={handleSignUp}
               disabled={loading}
@@ -134,4 +140,4 @@ export default function Auth() {
       </div>
     </div>
   );
-} 
+}

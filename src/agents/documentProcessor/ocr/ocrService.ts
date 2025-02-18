@@ -32,16 +32,12 @@ export class OcrService {
       }
 
       if (!options.documentContext) {
-        throw new ProcessingError(
-          'Dokumentkontext ist erforderlich',
-          'ocr-service',
-          null
-        );
+        throw new ProcessingError('Dokumentkontext ist erforderlich', 'ocr-service', null);
       }
 
       // Verfügbaren Processor abrufen
       const processor = await this.processorFactory.getProcessor(options);
-      
+
       // OCR durchführen
       const result = await processor.processImage(image, options);
 
@@ -60,24 +56,19 @@ export class OcrService {
           ...options.documentContext.metadata,
           ocrProcessor: result.processor,
           ocrConfidence: result.confidence,
-          processingTime: result.processingTime
-        }
+          processingTime: result.processingTime,
+        },
       };
 
       return {
         ...result,
-        context
+        context,
       };
-
     } catch (error) {
       if (error instanceof ProcessingError) {
         throw error;
       }
-      throw new ProcessingError(
-        'OCR Verarbeitungsfehler',
-        'ocr-service',
-        error
-      );
+      throw new ProcessingError('OCR Verarbeitungsfehler', 'ocr-service', error);
     }
   }
 
@@ -85,4 +76,4 @@ export class OcrService {
     const processors = await this.processorFactory.getAllAvailableProcessors();
     return processors.map(p => p.getName());
   }
-} 
+}

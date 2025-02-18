@@ -72,7 +72,7 @@ export default function Statistics() {
         failed,
         inProgress,
         averageTime,
-        successRate
+        successRate,
       });
     } catch (err: any) {
       setError(err.message);
@@ -97,9 +97,7 @@ export default function Statistics() {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <h2 className="text-xl font-semibold mb-4">Statistiken</h2>
-        <div className="p-4 text-red-700 bg-red-100 rounded-lg">
-          {error}
-        </div>
+        <div className="p-4 text-red-700 bg-red-100 rounded-lg">{error}</div>
       </div>
     );
   }
@@ -107,23 +105,23 @@ export default function Statistics() {
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <h2 className="text-xl font-semibold mb-6">Statistiken</h2>
-      
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="p-4 bg-blue-50 rounded-lg">
           <div className="text-sm text-blue-600 mb-1">Gesamt</div>
           <div className="text-2xl font-semibold">{stats?.total || 0}</div>
         </div>
-        
+
         <div className="p-4 bg-green-50 rounded-lg">
           <div className="text-sm text-green-600 mb-1">Abgeschlossen</div>
           <div className="text-2xl font-semibold">{stats?.completed || 0}</div>
         </div>
-        
+
         <div className="p-4 bg-yellow-50 rounded-lg">
           <div className="text-sm text-yellow-600 mb-1">In Bearbeitung</div>
           <div className="text-2xl font-semibold">{stats?.inProgress || 0}</div>
         </div>
-        
+
         <div className="p-4 bg-red-50 rounded-lg">
           <div className="text-sm text-red-600 mb-1">Fehlgeschlagen</div>
           <div className="text-2xl font-semibold">{stats?.failed || 0}</div>
@@ -137,7 +135,7 @@ export default function Statistics() {
             {stats?.successRate ? stats.successRate.toFixed(1) : 0}%
           </div>
         </div>
-        
+
         <div className="p-4 bg-gray-50 rounded-lg">
           <div className="text-sm text-gray-600 mb-1">Durchschnittliche Zeit</div>
           <div className="text-2xl font-semibold">
@@ -147,4 +145,4 @@ export default function Statistics() {
       </div>
     </div>
   );
-} 
+}

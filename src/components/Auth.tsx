@@ -33,7 +33,7 @@ export default function Auth() {
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={e => setEmail(e.target.value)}
           placeholder="Email"
           className="w-full p-2 border rounded"
           required
@@ -43,7 +43,7 @@ export default function Auth() {
         <input
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={e => setPassword(e.target.value)}
           placeholder="Password"
           className="w-full p-2 border rounded"
           required
@@ -58,4 +58,4 @@ export default function Auth() {
       </button>
     </form>
   );
-} 
+}
