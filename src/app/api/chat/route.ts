@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Am Anfang der Datei
 console.log('Environment Debug:', {
   NODE_ENV: process.env.NODE_ENV,
-  envFiles: require('fs').readdirSync('.').filter(f => f.startsWith('.env')),
+  envFiles: require('fs').readdirSync('.').filter(function(f: string) { return f.startsWith('.env'); }),
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   OPENAI_API_KEY_LENGTH: process.env.OPENAI_API_KEY?.length,
   OPENAI_API_KEY_START: process.env.OPENAI_API_KEY?.substring(0, 10),
