@@ -105,10 +105,7 @@ export async function detectLanguage(text: string): Promise<SupportedLanguages> 
   return detectedLanguage;
 }
 
-export async function translateText(
-  text: string,
-  targetLanguage: SupportedLanguages
-): Promise<string> {
+export function translateText(text: string, sourceLanguage: string): string {
   // Implementierung der Übersetzung für alle unterstützten Sprachen
   return text;
 }

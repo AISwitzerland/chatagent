@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import type { CreateEmailResponse } from 'resend';
 import { isErrorWithMessage, ValidationError, isValidEmail } from '../types/utils';
 import { API } from '../types/constants';
+import { supabase } from './supabaseClient';
 
 interface EmailMetadata {
   documentType: string;

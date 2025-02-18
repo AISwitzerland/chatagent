@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import ChatMessages from './ChatMessages';
 import ChatInput from './ChatInput';
 import { Message, DataCollectionState, DataCollectionStep, UserContactData } from '../../types';
@@ -10,9 +10,10 @@ import {
   updateDataCollectionState,
   validateInput,
 } from '../../services/dataCollectionService';
+import { _DataCollectionStep } from '@/types/chat';
 
 // Aktualisiere die Props der Komponenten
-interface ChatMessagesProps {
+interface _ChatMessagesProps {
   messages: Message[];
   loading: boolean;
   showUpload?: boolean;
@@ -21,7 +22,7 @@ interface ChatMessagesProps {
   onUploadError: (errorMessage: string) => void;
 }
 
-interface ChatInputProps {
+interface _ChatInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;

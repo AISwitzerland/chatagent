@@ -1,3 +1,9 @@
+import type { DocumentType, ProcessingContext } from '../agents/documentProcessor/types';
+
+// Re-export types from document processor
+export type { DocumentType, ProcessingContext };
+
+// Processing Status Types
 export type ProcessingStatus =
   | 'queued'
   | 'processing_ocr'
@@ -6,39 +12,52 @@ export type ProcessingStatus =
   | 'completed'
   | 'failed';
 
-export type ProcessingStep = 'upload' | 'ocr' | 'classification' | 'storage' | 'validation';
+export type ProcessingStep = 'upload' | 'ocr' | 'classification' | 'storage';
 
+// Core Processing Types
 export interface ProcessingProgress {
   processId: string;
   status: ProcessingStatus;
   currentStep: ProcessingStep;
-  progress: number;
-  message: string;
+  progressPercentage: number;
+  message?: string;
   error?: ProcessingError;
-  startedAt?: string;
-  updatedAt?: string;
+  startedAt: string;
   completedAt?: string;
+  context?: ProcessingContext;
 }
 
 export interface ProcessingError {
   code: string;
   message: string;
-  step: string;
-  details?: any;
-  retryCount?: number;
-  timestamp: string;
+  details?: Record<string, unknown>;
 }
 
 export interface ProcessingOptions {
-  maxRetries?: number;
-  retryDelay?: number;
-  timeout?: number;
-  priority?: 'low' | 'normal' | 'high';
+  maxRetries: number;
+  timeout: number;
+  priority?: 'high' | 'normal' | 'low';
+  [key: string]: unknown;
 }
 
 export const DEFAULT_PROCESSING_OPTIONS: ProcessingOptions = {
-  maxRetries: 2,
-  retryDelay: 2000,
-  timeout: 120000,
-  priority: 'normal',
+  maxRetries: 3,
+  timeout: 300000, // 5 minutes
+  priority: 'normal'
 };
+
+// Consolidated ProcessingResult type
+export interface ProcessingResult {
+  success: boolean;
+  message: string;
+  documentType?: DocumentType;
+  processingTime: number;
+  confidence: number;
+  error?: ProcessingError;
+  data?: {
+    extractedText?: string;
+    metadata?: Record<string, unknown>;
+    [key: string]: unknown;
+  };
+  context?: ProcessingContext;
+}

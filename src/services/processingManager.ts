@@ -9,6 +9,7 @@ import {
 import { supabase } from './supabaseClient';
 import { DocumentAgent } from '../agents/documentProcessor/DocumentAgent';
 import { Document } from '../agents/documentProcessor/types';
+import { ProcessingResult } from '@/types/processing';
 
 export class ProcessingManager {
   private static instance: ProcessingManager | null = null;

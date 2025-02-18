@@ -172,3 +172,12 @@ export class ImagePreprocessor {
 }
 
 export const imagePreprocessor = new ImagePreprocessor();
+
+export async function preprocessImage(imagePath: string): Promise<PreprocessingResult> {
+  try {
+    const tempPath = await createTempFile();
+    // ... existing code ...
+  } catch (error) {
+    // ... existing code ...
+  }
+}

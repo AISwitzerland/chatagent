@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
-import { Message } from '@/types';
-import { detectIntents } from './intentService';
+import { _Message } from '@/types/chat';
+import { _detectIntents } from './intentService';
 import { analyzeSentiment, generateChatResponse } from './openaiService';
 import { processIntent } from './intentService';
 import { detectLanguage } from './languageService';

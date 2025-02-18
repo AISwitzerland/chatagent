@@ -1,6 +1,7 @@
 import { Intent, IntentCategory, IntentEntity, SupportedLanguages, IntentPattern } from '../types';
 import { MULTILINGUAL_INTENT_PATTERNS, URGENCY_INDICATORS } from '@/data/intentPatterns';
 import { intentPatterns } from '../data/intentPatterns';
+import { IntentType, IntentResult } from '@/types/intents';
 
 // Definieren der Intent-Patterns
 const INTENT_PATTERNS = {
@@ -286,4 +287,20 @@ export async function processIntent(message: string): Promise<string | null> {
 export function getResponseForIntent(intent: string, language: string = 'de'): string {
   // TODO: Implementiere Intent-basierte Antworten
   return 'Ich verstehe Ihr Anliegen. Wie kann ich Ihnen weiterhelfen?';
+}
+
+export function processIntent(intent: Intent, text: string): IntentResult {
+  // ... existing code ...
+}
+
+export function extractInsuranceTypes(text: string): string[] {
+  // ... existing code ...
+}
+
+export function extractDocumentTypes(text: string): string[] {
+  // ... existing code ...
+}
+
+export function detectIntents(text: string): Intent[] {
+  // ... existing code ...
 }

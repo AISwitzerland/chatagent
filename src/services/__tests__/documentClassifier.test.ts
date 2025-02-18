@@ -1,6 +1,4 @@
 import 'openai/shims/node';
-import OpenAI from 'openai';
-import { isNonEmptyString, ValidationError, isErrorWithMessage } from '../types/utils';
 import { DocumentClassifier } from '../documentClassifier';
 
 // Mock OpenAI
